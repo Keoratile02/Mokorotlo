@@ -1,93 +1,88 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Realistic Mokorotlo</title>
+  <title>Mokorotlo Realistic</title>
 </head>
 <body>
-<canvas id="mokorotloCanvas" width="400" height="400" style="border:1px solid #000;"></canvas>
+<canvas id="mokorotloCanvas" width="500" height="500" style="border:1px solid #000;"></canvas>
 
 <script>
 const canvas = document.getElementById("mokorotloCanvas");
 const ctx = canvas.getContext("2d");
 
-// Draw base brim (ellipse)
-function drawBrim() {
-    ctx.fillStyle = "#D2B48C"; // straw color
+// Function to draw the circular base layers
+function drawLayer(y, radiusX, radiusY, fillColor, strokeColor) {
     ctx.beginPath();
-    ctx.ellipse(200, 280, 130, 40, 0, 0, 2 * Math.PI);
+    ctx.ellipse(250, y, radiusX, radiusY, 0, 0, 2 * Math.PI);
+    ctx.fillStyle = fillColor;
     ctx.fill();
-    ctx.strokeStyle = "#A0522D";
+    ctx.strokeStyle = strokeColor;
     ctx.lineWidth = 2;
     ctx.stroke();
 }
 
-// Draw cone of the hat
+// Function to draw the cone
 function drawCone() {
-    ctx.fillStyle = "#F4A460"; // lighter straw
     ctx.beginPath();
-    ctx.moveTo(140, 260); // left bottom
-    ctx.quadraticCurveTo(200, 60, 260, 260); // curve to tip and down
+    ctx.moveTo(150, 250); // bottom left
+    ctx.lineTo(250, 100); // top tip
+    ctx.lineTo(350, 250); // bottom right
     ctx.closePath();
+    ctx.fillStyle = "#F4D27A"; // straw
     ctx.fill();
-    ctx.strokeStyle = "#A0522D";
+    ctx.strokeStyle = "#D2A679";
     ctx.lineWidth = 2;
     ctx.stroke();
 }
 
-// Draw woven lines for texture
-function drawWovenTexture() {
-    ctx.strokeStyle = "#C68642";
-    ctx.lineWidth = 1;
+// Function to add colored rings on cone
+function drawRings() {
+    // red ring
+    ctx.beginPath();
+    ctx.ellipse(250, 220, 110, 20, 0, 0, 2*Math.PI);
+    ctx.fillStyle = "#8B0000";
+    ctx.fill();
 
-    // horizontal stripes on cone
-    for (let y = 70; y <= 260; y += 12) {
-        ctx.beginPath();
-        let x1 = 140 + ((y - 60)/200) * 120; // left curve
-        let x2 = 260 - ((y - 60)/200) * 120; // right curve
-        ctx.moveTo(x1, y);
-        ctx.lineTo(x2, y);
-        ctx.stroke();
-    }
-
-    // diagonal weaving
-    for (let i = 0; i < 10; i++) {
-        ctx.beginPath();
-        ctx.moveTo(140 + i*12, 260);
-        ctx.lineTo(200, 60 + i*18);
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(260 - i*12, 260);
-        ctx.lineTo(200, 60 + i*18);
-        ctx.stroke();
-    }
+    // green ring
+    ctx.beginPath();
+    ctx.ellipse(250, 250, 110, 20, 0, 0, 2*Math.PI);
+    ctx.fillStyle = "#006400";
+    ctx.fill();
 }
 
-// Draw top tuft (straw sticking out)
-function drawTopTuft() {
-    ctx.strokeStyle = "#D2B48C";
-    ctx.lineWidth = 2;
+// Function to add LESOTHO text
+function drawText() {
+    ctx.fillStyle = "#000080";
+    ctx.font = "bold 24px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("LESOTHO", 250, 215);
+}
+
+// Function to draw top handle/tuft
+function drawTuft() {
     ctx.beginPath();
-    ctx.moveTo(200, 60);
-    ctx.lineTo(200, 40);
+    ctx.moveTo(250, 100);
+    ctx.lineTo(250, 60);
+    ctx.strokeStyle = "#C19A6B";
+    ctx.lineWidth = 5;
+    ctx.stroke();
+
+    // small side loops
+    ctx.beginPath();
+    ctx.arc(245, 80, 8, 0, Math.PI * 2);
     ctx.stroke();
 
     ctx.beginPath();
-    ctx.moveTo(200, 60);
-    ctx.lineTo(210, 45);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(200, 60);
-    ctx.lineTo(190, 45);
+    ctx.arc(255, 80, 8, 0, Math.PI * 2);
     ctx.stroke();
 }
 
-// Draw the full Mokorotlo
-drawBrim();
+// Draw the Mokorotlo
+drawLayer(250, 130, 40, "#F5DEB3", "#D2A679"); // bottom brim
 drawCone();
-drawWovenTexture();
-drawTopTuft();
+drawRings();
+drawText();
+drawTuft();
 </script>
 </body>
 </html>
