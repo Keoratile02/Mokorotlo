@@ -1,69 +1,52 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Basket Stand</title>
-  <style>
-    body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background-color: white;
-    }
-    canvas {
-      border: 1px solid #ccc;
-    }
-  </style>
+  <title>Mokorotlo Drawing</title>
 </head>
 <body>
-  <canvas id="basketCanvas" width="600" height="400"></canvas>
+<canvas id="mokorotloCanvas" width="400" height="400" style="border:1px solid #000000;"></canvas>
 
-  <script>
-    const canvas = document.getElementById('basketCanvas');
-    const ctx = canvas.getContext('2d');
+<script>
+const canvas = document.getElementById("mokorotloCanvas");
+const ctx = canvas.getContext("2d");
 
-    function drawBasket(x, y, colors) {
-      const rings = [40, 32, 24, 16, 8];
+// Function to draw the base of the hat
+function drawBase() {
+    ctx.fillStyle = "#8B4513"; // brown
+    ctx.beginPath();
+    ctx.ellipse(200, 250, 120, 40, 0, 0, 2 * Math.PI); // base oval
+    ctx.fill();
+}
 
-      // Draw colored rings
-      rings.forEach((radius, index) => {
+// Function to draw the cone of the hat
+function drawCone() {
+    ctx.fillStyle = "#A0522D"; // lighter brown
+    ctx.beginPath();
+    ctx.moveTo(120, 250); // left base
+    ctx.lineTo(200, 80);  // tip of cone
+    ctx.lineTo(280, 250); // right base
+    ctx.closePath();
+    ctx.fill();
+}
+
+// Function to draw stripes on the cone
+function drawStripes() {
+    ctx.strokeStyle = "#5C4033"; // dark stripe
+    ctx.lineWidth = 3;
+    for (let y = 100; y < 250; y += 15) {
         ctx.beginPath();
-        ctx.strokeStyle = colors[index % colors.length];
-        ctx.lineWidth = 3;
-        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        let x1 = 200 - (y - 80) / 2.5; // left side
+        let x2 = 200 + (y - 80) / 2.5; // right side
+        ctx.moveTo(x1, y);
+        ctx.lineTo(x2, y);
         ctx.stroke();
-      });
-
-      // Draw top knob
-      ctx.beginPath();
-      ctx.fillStyle = 'brown';
-      ctx.arc(x, y - 40, 6, 0, Math.PI * 2);
-      ctx.fill();
     }
+}
 
-    function drawStand() {
-      ctx.beginPath();
-      ctx.fillStyle = 'saddlebrown';
-      ctx.moveTo(150, 300);
-      ctx.quadraticCurveTo(300, 100, 450, 300);
-      ctx.lineTo(430, 310);
-      ctx.quadraticCurveTo(300, 130, 170, 310);
-      ctx.closePath();
-      ctx.fill();
-    }
-
-    function drawScene() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawStand();
-
-      // Draw three baskets
-      drawBasket(200, 180, ['red', 'green', 'pink']);
-      drawBasket(300, 150, ['green', 'yellow', 'red']);
-      drawBasket(400, 180, ['purple', 'green', 'white']);
-    }
-
-    drawScene();
-  </script>
+// Draw the Mokorotlo
+drawBase();
+drawCone();
+drawStripes();
+</script>
 </body>
 </html>
