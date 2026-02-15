@@ -1,88 +1,137 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Mokorotlo Realistic</title>
+  <title>Refined Mokorotlo</title>
 </head>
 <body>
-<canvas id="mokorotloCanvas" width="500" height="500" style="border:1px solid #000;"></canvas>
+<canvas id="mokorotloCanvas" width="600" height="600" style="border:1px solid #000;"></canvas>
 
 <script>
 const canvas = document.getElementById("mokorotloCanvas");
 const ctx = canvas.getContext("2d");
 
-// Function to draw the circular base layers
-function drawLayer(y, radiusX, radiusY, fillColor, strokeColor) {
+// --- Draw Base Brim with shading ---
+function drawBrim() {
+    const gradient = ctx.createRadialGradient(300, 400, 50, 300, 400, 150);
+    gradient.addColorStop(0, "#F5DEB3"); // light straw
+    gradient.addColorStop(1, "#D2A679"); // darker edge
+
     ctx.beginPath();
-    ctx.ellipse(250, y, radiusX, radiusY, 0, 0, 2 * Math.PI);
-    ctx.fillStyle = fillColor;
+    ctx.ellipse(300, 400, 180, 50, 0, 0, 2*Math.PI);
+    ctx.fillStyle = gradient;
     ctx.fill();
-    ctx.strokeStyle = strokeColor;
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#A0522D";
+    ctx.lineWidth = 3;
     ctx.stroke();
 }
 
-// Function to draw the cone
+// --- Draw Curved Cone with shading ---
 function drawCone() {
+    const gradient = ctx.createLinearGradient(0, 150, 0, 400);
+    gradient.addColorStop(0, "#F4D27A"); // top
+    gradient.addColorStop(1, "#D2A679"); // bottom
+
     ctx.beginPath();
-    ctx.moveTo(150, 250); // bottom left
-    ctx.lineTo(250, 100); // top tip
-    ctx.lineTo(350, 250); // bottom right
+    ctx.moveTo(180, 400); // bottom left
+    ctx.quadraticCurveTo(300, 120, 420, 400); // top tip with curve
     ctx.closePath();
-    ctx.fillStyle = "#F4D27A"; // straw
+    ctx.fillStyle = gradient;
     ctx.fill();
-    ctx.strokeStyle = "#D2A679";
+    ctx.strokeStyle = "#C19A6B";
     ctx.lineWidth = 2;
     ctx.stroke();
 }
 
-// Function to add colored rings on cone
+// --- Draw Colored Rings ---
 function drawRings() {
     // red ring
     ctx.beginPath();
-    ctx.ellipse(250, 220, 110, 20, 0, 0, 2*Math.PI);
+    ctx.ellipse(300, 350, 120, 18, 0, 0, 2*Math.PI);
     ctx.fillStyle = "#8B0000";
     ctx.fill();
 
     // green ring
     ctx.beginPath();
-    ctx.ellipse(250, 250, 110, 20, 0, 0, 2*Math.PI);
+    ctx.ellipse(300, 380, 120, 18, 0, 0, 2*Math.PI);
     ctx.fillStyle = "#006400";
     ctx.fill();
 }
 
-// Function to add LESOTHO text
-function drawText() {
-    ctx.fillStyle = "#000080";
-    ctx.font = "bold 24px Arial";
+// --- Draw Straw Texture ---
+function drawStrawTexture() {
+    ctx.strokeStyle = "#C68642";
+    ctx.lineWidth = 1;
+
+    for (let y = 130; y <= 400; y += 12) {
+        ctx.beginPath();
+        let x1 = 180 + ((y-120)/280)*240;
+        let x2 = 420 - ((y-120)/280)*240;
+        ctx.moveTo(x1, y);
+        ctx.lineTo(x2, y);
+        ctx.stroke();
+    }
+    // diagonal weaving
+    for (let i = 0; i < 12; i++) {
+        ctx.beginPath();
+        ctx.moveTo(180 + i*20, 400);
+        ctx.lineTo(300, 120 + i*22);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(420 - i*20, 400);
+        ctx.lineTo(300, 120 + i*22);
+        ctx.stroke();
+    }
+}
+
+// --- Draw Top Tuft/Loops ---
+function drawTopTuft() {
+    ctx.strokeStyle = "#D2B48C";
+    ctx.lineWidth = 3;
+
+    // main tuft
+    ctx.beginPath();
+    ctx.moveTo(300, 120);
+    ctx.lineTo(300, 80);
+    ctx.stroke();
+
+    // side loops
+    ctx.beginPath();
+    ctx.arc(290, 100, 8, 0, Math.PI*2);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(310, 100, 8, 0, Math.PI*2);
+    ctx.stroke();
+}
+
+// --- Draw Curved LESOTHO Text ---
+function drawCurvedText(text, x, y, radius, startAngle, color) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(-Math.PI/2); // rotate to start
+    ctx.fillStyle = color;
+    ctx.font = "bold 26px Arial";
     ctx.textAlign = "center";
-    ctx.fillText("LESOTHO", 250, 215);
+
+    let angleStep = (Math.PI * 1.2) / text.length; // span text over ~68% of circle
+    for (let i = 0; i < text.length; i++) {
+        ctx.save();
+        ctx.rotate(i*angleStep);
+        ctx.fillText(text[i], 0, -radius);
+        ctx.restore();
+    }
+    ctx.restore();
 }
 
-// Function to draw top handle/tuft
-function drawTuft() {
-    ctx.beginPath();
-    ctx.moveTo(250, 100);
-    ctx.lineTo(250, 60);
-    ctx.strokeStyle = "#C19A6B";
-    ctx.lineWidth = 5;
-    ctx.stroke();
-
-    // small side loops
-    ctx.beginPath();
-    ctx.arc(245, 80, 8, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.arc(255, 80, 8, 0, Math.PI * 2);
-    ctx.stroke();
-}
-
-// Draw the Mokorotlo
-drawLayer(250, 130, 40, "#F5DEB3", "#D2A679"); // bottom brim
+// --- Draw Everything ---
+drawBrim();
 drawCone();
 drawRings();
-drawText();
-drawTuft();
+drawStrawTexture();
+drawTopTuft();
+drawCurvedText("LESOTHO", 300, 350, 135, 0, "#000080");
+
 </script>
 </body>
 </html>
