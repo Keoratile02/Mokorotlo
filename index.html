@@ -1,52 +1,93 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Mokorotlo Drawing</title>
+  <title>Realistic Mokorotlo</title>
 </head>
 <body>
-<canvas id="mokorotloCanvas" width="400" height="400" style="border:1px solid #000000;"></canvas>
+<canvas id="mokorotloCanvas" width="400" height="400" style="border:1px solid #000;"></canvas>
 
 <script>
 const canvas = document.getElementById("mokorotloCanvas");
 const ctx = canvas.getContext("2d");
 
-// Function to draw the base of the hat
-function drawBase() {
-    ctx.fillStyle = "#8B4513"; // brown
+// Draw base brim (ellipse)
+function drawBrim() {
+    ctx.fillStyle = "#D2B48C"; // straw color
     ctx.beginPath();
-    ctx.ellipse(200, 250, 120, 40, 0, 0, 2 * Math.PI); // base oval
+    ctx.ellipse(200, 280, 130, 40, 0, 0, 2 * Math.PI);
     ctx.fill();
+    ctx.strokeStyle = "#A0522D";
+    ctx.lineWidth = 2;
+    ctx.stroke();
 }
 
-// Function to draw the cone of the hat
+// Draw cone of the hat
 function drawCone() {
-    ctx.fillStyle = "#A0522D"; // lighter brown
+    ctx.fillStyle = "#F4A460"; // lighter straw
     ctx.beginPath();
-    ctx.moveTo(120, 250); // left base
-    ctx.lineTo(200, 80);  // tip of cone
-    ctx.lineTo(280, 250); // right base
+    ctx.moveTo(140, 260); // left bottom
+    ctx.quadraticCurveTo(200, 60, 260, 260); // curve to tip and down
     ctx.closePath();
     ctx.fill();
+    ctx.strokeStyle = "#A0522D";
+    ctx.lineWidth = 2;
+    ctx.stroke();
 }
 
-// Function to draw stripes on the cone
-function drawStripes() {
-    ctx.strokeStyle = "#5C4033"; // dark stripe
-    ctx.lineWidth = 3;
-    for (let y = 100; y < 250; y += 15) {
+// Draw woven lines for texture
+function drawWovenTexture() {
+    ctx.strokeStyle = "#C68642";
+    ctx.lineWidth = 1;
+
+    // horizontal stripes on cone
+    for (let y = 70; y <= 260; y += 12) {
         ctx.beginPath();
-        let x1 = 200 - (y - 80) / 2.5; // left side
-        let x2 = 200 + (y - 80) / 2.5; // right side
+        let x1 = 140 + ((y - 60)/200) * 120; // left curve
+        let x2 = 260 - ((y - 60)/200) * 120; // right curve
         ctx.moveTo(x1, y);
         ctx.lineTo(x2, y);
         ctx.stroke();
     }
+
+    // diagonal weaving
+    for (let i = 0; i < 10; i++) {
+        ctx.beginPath();
+        ctx.moveTo(140 + i*12, 260);
+        ctx.lineTo(200, 60 + i*18);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(260 - i*12, 260);
+        ctx.lineTo(200, 60 + i*18);
+        ctx.stroke();
+    }
 }
 
-// Draw the Mokorotlo
-drawBase();
+// Draw top tuft (straw sticking out)
+function drawTopTuft() {
+    ctx.strokeStyle = "#D2B48C";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(200, 60);
+    ctx.lineTo(200, 40);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(200, 60);
+    ctx.lineTo(210, 45);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(200, 60);
+    ctx.lineTo(190, 45);
+    ctx.stroke();
+}
+
+// Draw the full Mokorotlo
+drawBrim();
 drawCone();
-drawStripes();
+drawWovenTexture();
+drawTopTuft();
 </script>
 </body>
 </html>
