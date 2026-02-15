@@ -1,91 +1,268 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Authentic Mokorotlo</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mokorotlo (Basotho Hat) – SVG + JavaScript</title>
+  <style>
+    :root{
+      --straw:#c9a86a;
+      --straw-dark:#a98647;
+      --shadow:#8a6a35;
+      --accent:#3c2f1e;
+      --hover-glow: rgba(201,168,106,0.35);
+      --bg:#f6f4ee;
+    }
+    html,body{
+      height:100%;
+      margin:0;
+      background:var(--bg);
+      font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      color:#222;
+    }
+    .wrap{
+      min-height:100%;
+      display:grid;
+      place-items:center;
+      padding:24px;
+    }
+    .card{
+      width:min(760px, 92vw);
+      background:#fff;
+      border-radius:16px;
+      box-shadow:0 10px 24px rgba(0,0,0,0.08);
+      padding:20px;
+    }
+    h1{
+      margin:8px 0 0 0;
+      font-size:1.2rem;
+      font-weight:600;
+    }
+    p{
+      margin:6px 0 14px 0;
+      color:#555;
+      font-size:0.95rem;
+    }
+
+    /* SVG container keeps aspect ratio */
+    .viewport{
+      width:100%;
+      aspect-ratio: 16 / 10;
+      display:grid;
+      place-items:center;
+      border-radius:12px;
+      background:
+        radial-gradient(1200px 600px at 50% 110%, #ece7db, #faf9f3 60%, #ffffff 100%);
+      position:relative;
+      overflow:hidden;
+    }
+
+    /* Canvas alignment */
+    svg{
+      width:90%;
+      height:auto;
+      overflow:visible;
+    }
+
+    /* Lighting effect on hover */
+    .hover-area{
+      transition: filter 220ms ease, transform 250ms ease;
+      filter: drop-shadow(0 8px 18px rgba(0,0,0,0.12));
+    }
+    .hover-area:hover{
+      filter: drop-shadow(0 12px 28px rgba(0,0,0,0.18));
+      transform: translateY(-1px);
+    }
+
+    /* Spin animation when toggled */
+    .spin{
+      animation: spin 6s linear infinite;
+      transform-origin: 50% 65%;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+    .controls{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      margin-top:10px;
+      flex-wrap:wrap;
+    }
+    button{
+      padding:10px 14px;
+      border-radius:10px;
+      background:#222;
+      color:#fff;
+      border:none;
+      cursor:pointer;
+    }
+    button.secondary{
+      background:#e7e3d9;
+      color:#222;
+    }
+    .hint{
+      font-size:0.9rem;
+      color:#666;
+    }
+  </style>
 </head>
 <body>
-<canvas id="mokorotloCanvas" width="600" height="600"></canvas>
-<script>
-const canvas = document.getElementById("mokorotloCanvas");
-const ctx = canvas.getContext("2d");
+  <div class="wrap">
+    <div class="card">
+      <h1>Mokorotlo (Basotho Hat)</h1>
+      <p>Click the hat to toggle a gentle spin. Hover to see a subtle glow.</p>
+      <div class="viewport">
+        <!-- SVG Scene -->
+        <svg viewBox="0 0 800 500" role="img" aria-label="Mokorotlo Basotho hat illustration">
+          <!-- Ground shadow -->
+          <ellipse cx="400" cy="420" rx="220" ry="28" fill="rgba(0,0,0,0.10)"></ellipse>
 
-// light straw base color
-const strawLight = "#E9D7A3";
-const strawDark = "#B89A60";
+          <!-- Group that we spin -->
+          <g id="hat" class="hover-area" tabindex="0" role="button" aria-label="Toggle spin">
+            <!-- Wide brim (ellipse) -->
+            <ellipse cx="400" cy="350" rx="260" ry="60" fill="url(#strawGradient)" stroke="var(--straw-dark)" stroke-width="3" />
 
-// DRAW SHADOW
-function drawShadow() {
-  const grad = ctx.createRadialGradient(300, 480, 20, 300, 480, 170);
-  grad.addColorStop(0, "rgba(0,0,0,0.25)");
-  grad.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.ellipse(300, 490, 170, 30, 0, 0, 2*Math.PI);
-  ctx.fill();
-}
+            <!-- Brim rim highlight and shadow -->
+            <ellipse cx="400" cy="350" rx="260" ry="60" fill="none" stroke="url(#rimHighlight)" stroke-width="6" opacity="0.45" />
+            <ellipse cx="400" cy="350" rx="260" ry="60" fill="none" stroke="url(#rimShadow)" stroke-width="8" opacity="0.35" />
 
-// DRAW BRIM
-function drawBrim() {
-  const grad = ctx.createRadialGradient(300, 490, 50, 300, 490, 180);
-  grad.addColorStop(0, strawLight);
-  grad.addColorStop(1, strawDark);
-  ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.ellipse(300, 490, 180, 45, 0, 0, 2*Math.PI);
-  ctx.fill();
-}
+            <!-- Conical body -->
+            <path d="
+              M 400 110
+              C 365 180, 320 240, 290 300
+              C 270 340, 275 352, 400 352
+              C 525 352, 530 340, 510 300
+              C 480 240, 435 180, 400 110
+            " fill="url(#coneStraw)" stroke="var(--straw-dark)" stroke-width="3" />
 
-// DRAW CONE
-function drawCone() {
-  const grad = ctx.createLinearGradient(300, 130, 300, 490);
-  grad.addColorStop(0, strawLight);
-  grad.addColorStop(1, strawDark);
-  ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.moveTo(150, 490);
-  ctx.quadraticCurveTo(300, 110, 450, 490);
-  ctx.closePath();
-  ctx.fill();
-}
+            <!-- Decorative bands on the cone -->
+            <path d="M 318 280 C 400 260, 400 260, 482 280" fill="none" stroke="var(--accent)" stroke-width="6" opacity="0.3"/>
+            <path d="M 305 308 C 400 292, 400 292, 495 308" fill="none" stroke="var(--accent)" stroke-width="5" opacity="0.35"/>
 
-// TEXTURED LINES - horizontal straw
-function drawWeaveLines() {
-  ctx.strokeStyle = "#C2A76D";
-  ctx.lineWidth = 1;
-  for (let y = 160; y < 490; y += 14) {
-    ctx.beginPath();
-    let left = 150 + ((y - 150)/340)*300;
-    let right = 450 - ((y - 150)/340)*300;
-    ctx.moveTo(left, y);
-    ctx.lineTo(right, y);
-    ctx.stroke();
-  }
-}
+            <!-- Top knot (iconic peak) -->
+            <g>
+              <!-- Base ring under the knot -->
+              <ellipse cx="400" cy="126" rx="30" ry="12" fill="url(#ringGradient)" stroke="var(--straw-dark)" stroke-width="2"/>
 
-// TOP WOVEN KNOB LOOP
-function drawTopKnob() {
-  ctx.strokeStyle = strawDark;
-  ctx.lineWidth = 4;
-  // upright loop
-  ctx.beginPath();
-  ctx.moveTo(300, 110);
-  ctx.lineTo(300, 75);
-  ctx.stroke();
-  // woven bead loops
-  ctx.beginPath();
-  ctx.arc(290, 90, 7, 0, Math.PI*2);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(310, 90, 7, 0, Math.PI*2);
-  ctx.stroke();
-}
+              <!-- Knot stem -->
+              <path d="M 400 124 C 398 108, 402 94, 400 78" stroke="var(--accent)" stroke-width="6" stroke-linecap="round" />
 
-// RENDER ALL
-drawShadow();
-drawBrim();
-drawCone();
-drawWeaveLines();
-drawTopKnob();
-</script>
+              <!-- Knot head -->
+              <circle cx="400" cy="70" r="12" fill="var(--accent)"/>
+              <circle cx="400" cy="70" r="12" fill="url(#knotHighlight)" opacity="0.6"/>
+            </g>
+
+            <!-- Woven pattern hints (subtle cross-hatch arcs) -->
+            <g opacity="0.25">
+              <path d="M 330 220 C 400 210, 400 210, 470 220" fill="none" stroke="var(--shadow)" stroke-width="2"/>
+              <path d="M 340 245 C 400 235, 400 235, 460 245" fill="none" stroke="var(--shadow)" stroke-width="2"/>
+              <path d="M 350 265 C 400 257, 400 257, 450 265" fill="none" stroke="var(--shadow)" stroke-width="2"/>
+
+              <path d="M 370 240 C 360 255, 360 255, 350 270" fill="none" stroke="var(--shadow)" stroke-width="2"/>
+              <path d="M 430 240 C 440 255, 440 255, 450 270" fill="none" stroke="var(--shadow)" stroke-width="2"/>
+            </g>
+          </g>
+
+          <!-- Gradients and defs -->
+          <defs>
+            <radialGradient id="strawGradient" cx="50%" cy="35%" r="65%">
+              <stop offset="0%"  stop-color="#e9d4a3"/>
+              <stop offset="55%" stop-color="#d9be80"/>
+              <stop offset="100%" stop-color="#bf9c5a"/>
+            </radialGradient>
+
+            <linearGradient id="rimHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#ffffff"/>
+              <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+            </linearGradient>
+            <linearGradient id="rimShadow" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stop-color="#6f552a"/>
+              <stop offset="100%" stop-color="#6f552a" stop-opacity="0"/>
+            </linearGradient>
+
+            <linearGradient id="coneStraw" x1="50%" y1="0%" x2="50%" y2="100%">
+              <stop offset="0%"  stop-color="#ecd8a9"/>
+              <stop offset="50%" stop-color="#d9bd7d"/>
+              <stop offset="100%" stop-color="#b9924e"/>
+            </linearGradient>
+
+            <radialGradient id="ringGradient" cx="50%" cy="40%" r="80%">
+              <stop offset="0%"  stop-color="#f2e4c7"/>
+              <stop offset="60%" stop-color="#d8be8a"/>
+              <stop offset="100%" stop-color="#b28948"/>
+            </radialGradient>
+
+            <radialGradient id="knotHighlight" cx="40%" cy="35%" r="80%">
+              <stop offset="0%"  stop-color="#ffffff" stop-opacity="0.6"/>
+              <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+            </radialGradient>
+
+            <!-- Soft halo on hover -->
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="6" result="b"/>
+              <feMerge>
+                <feMergeNode in="b"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+        </svg>
+      </div>
+
+      <div class="controls">
+        <button id="toggleSpin">Toggle Spin</button>
+        <button id="resetView" class="secondary">Reset View</button>
+        <span class="hint">Tip: click the hat or press Enter when focused.</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const hat = document.getElementById('hat');
+      const btn = document.getElementById('toggleSpin');
+      const resetBtn = document.getElementById('resetView');
+
+      let spinning = false;
+
+      function setSpin(on){
+        spinning = on;
+        hat.classList.toggle('spin', spinning);
+        btn.textContent = spinning ? 'Stop Spin' : 'Toggle Spin';
+      }
+
+      // Toggle by clicking the hat or the button
+      hat.addEventListener('click', () => setSpin(!spinning));
+      btn.addEventListener('click', () => setSpin(!spinning));
+
+      // Keyboard accessibility
+      hat.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          setSpin(!spinning);
+        }
+      });
+
+      // Reset minor transforms and stop spin
+      resetBtn.addEventListener('click', () => {
+        setSpin(false);
+        // Optionally, future transforms can be reset here
+      });
+
+      // Optional: subtle hover glow on pointer devices
+      const prefersFine = matchMedia('(pointer: fine)').matches;
+      if (prefersFine){
+        hat.addEventListener('mouseenter', () => {
+          hat.style.filter = 'drop-shadow(0 14px 30px var(--hover-glow))';
+        });
+        hat.addEventListener('mouseleave', () => {
+          hat.style.filter = '';
+        });
+      }
+    })();
+  </script>
 </body>
 </html>
