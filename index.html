@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Refined Mokorotlo</title>
+  <title>Authentic Mokorotlo</title>
 </head>
 <body>
 <canvas id="mokorotloCanvas" width="600" height="600"></canvas>
@@ -9,71 +9,69 @@
 const canvas = document.getElementById("mokorotloCanvas");
 const ctx = canvas.getContext("2d");
 
-// Shadow under the hat
+// light straw base color
+const strawLight = "#E9D7A3";
+const strawDark = "#B89A60";
+
+// DRAW SHADOW
 function drawShadow() {
-  const grad = ctx.createRadialGradient(300, 450, 10, 300, 450, 150);
+  const grad = ctx.createRadialGradient(300, 480, 20, 300, 480, 170);
   grad.addColorStop(0, "rgba(0,0,0,0.25)");
   grad.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = grad;
   ctx.beginPath();
-  ctx.ellipse(300, 460, 170, 25, 0, 0, 2*Math.PI);
+  ctx.ellipse(300, 490, 170, 30, 0, 0, 2*Math.PI);
   ctx.fill();
 }
 
-// Main cone
-function drawCone() {
-  const coneGrad = ctx.createLinearGradient(300, 120, 300, 450);
-  coneGrad.addColorStop(0, "#E8D4A2");
-  coneGrad.addColorStop(1, "#C19A6B");
-  ctx.fillStyle = coneGrad;
+// DRAW BRIM
+function drawBrim() {
+  const grad = ctx.createRadialGradient(300, 490, 50, 300, 490, 180);
+  grad.addColorStop(0, strawLight);
+  grad.addColorStop(1, strawDark);
+  ctx.fillStyle = grad;
   ctx.beginPath();
-  ctx.moveTo(160, 450);
-  ctx.quadraticCurveTo(300, 110, 440, 450);
+  ctx.ellipse(300, 490, 180, 45, 0, 0, 2*Math.PI);
+  ctx.fill();
+}
+
+// DRAW CONE
+function drawCone() {
+  const grad = ctx.createLinearGradient(300, 130, 300, 490);
+  grad.addColorStop(0, strawLight);
+  grad.addColorStop(1, strawDark);
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.moveTo(150, 490);
+  ctx.quadraticCurveTo(300, 110, 450, 490);
   ctx.closePath();
   ctx.fill();
 }
 
-// Brim shape
-function drawBrim() {
-  const brimGrad = ctx.createRadialGradient(300, 480, 50, 300, 480, 160);
-  brimGrad.addColorStop(0, "#E8D4A2");
-  brimGrad.addColorStop(1, "#AD8761");
-  ctx.fillStyle = brimGrad;
-  ctx.beginPath();
-  ctx.ellipse(300, 480, 160, 45, 0, 0, 2*Math.PI);
-  ctx.fill();
-}
-
-// Straw texture
-function drawStrawTexture() {
-  ctx.strokeStyle = "#B89560";
+// TEXTURED LINES - horizontal straw
+function drawWeaveLines() {
+  ctx.strokeStyle = "#C2A76D";
   ctx.lineWidth = 1;
-  for(let y = 150; y < 450; y += 14) {
-      ctx.beginPath();
-      let leftX = 160 + ((y - 150)/300)*280;
-      let rightX = 440 - ((y - 150)/300)*280;
-      ctx.moveTo(leftX, y);
-      ctx.lineTo(rightX, y);
-      ctx.stroke();
+  for (let y = 160; y < 490; y += 14) {
+    ctx.beginPath();
+    let left = 150 + ((y - 150)/340)*300;
+    let right = 450 - ((y - 150)/340)*300;
+    ctx.moveTo(left, y);
+    ctx.lineTo(right, y);
+    ctx.stroke();
   }
 }
 
-// Colored band around the hat
-function drawBand() {
-  ctx.fillStyle = "#8B0000";
-  ctx.beginPath();
-  ctx.ellipse(300, 360, 120, 18, 0, 0, 2*Math.PI);
-  ctx.fill();
-}
-
-// Top tuft/knob detail
-function drawTuft() {
-  ctx.strokeStyle = "#C19A6B";
+// TOP WOVEN KNOB LOOP
+function drawTopKnob() {
+  ctx.strokeStyle = strawDark;
   ctx.lineWidth = 4;
+  // upright loop
   ctx.beginPath();
   ctx.moveTo(300, 110);
   ctx.lineTo(300, 75);
   ctx.stroke();
+  // woven bead loops
   ctx.beginPath();
   ctx.arc(290, 90, 7, 0, Math.PI*2);
   ctx.stroke();
@@ -82,30 +80,12 @@ function drawTuft() {
   ctx.stroke();
 }
 
-// Curved text function
-function drawCurvedText(text, cx, cy, radius) {
-  ctx.save();
-  ctx.translate(cx, cy);
-  ctx.rotate(-Math.PI / 2 + 0.20);
-  ctx.fillStyle = "#000080";
-  ctx.font = "bold 24px Arial";
-  for(let i = 0; i < text.length; i++) {
-      ctx.save();
-      ctx.rotate(i * (Math.PI * 0.6 / text.length));
-      ctx.fillText(text[i], 0, -radius);
-      ctx.restore();
-  }
-  ctx.restore();
-}
-
-// Render all
+// RENDER ALL
 drawShadow();
 drawBrim();
 drawCone();
-drawStrawTexture();
-drawBand();
-drawTuft();
-drawCurvedText("LESOTHO", 300, 360, 130);
+drawWeaveLines();
+drawTopKnob();
 </script>
 </body>
 </html>
