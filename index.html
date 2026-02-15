@@ -1,17 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Mokorotlo (Basotho Hat) – SVG + JavaScript</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Mokorotlo (Basotho Hat) – Realistic SVG</title>
   <style>
     :root{
-      --straw:#c9a86a;
-      --straw-dark:#a98647;
-      --shadow:#8a6a35;
+      --straw:#caa96b;
+      --straw-mid:#b99253;
+      --straw-dark:#8d6d36;
       --accent:#3c2f1e;
-      --hover-glow: rgba(201,168,106,0.35);
-      --bg:#f6f4ee;
+      --bg:#f6f2e9;
     }
     html,body{
       height:100%;
@@ -27,24 +26,13 @@
       padding:24px;
     }
     .card{
-      width:min(760px, 92vw);
+      width:min(960px,94vw);
       background:#fff;
       border-radius:16px;
-      box-shadow:0 10px 24px rgba(0,0,0,0.08);
-      padding:20px;
+      box-shadow:0 10px 24px rgba(0,0,0,.08);
+      padding:18px;
     }
-    h1{
-      margin:8px 0 0 0;
-      font-size:1.2rem;
-      font-weight:600;
-    }
-    p{
-      margin:6px 0 14px 0;
-      color:#555;
-      font-size:0.95rem;
-    }
-
-    /* SVG container keeps aspect ratio */
+    h1{ font-size:1.15rem; margin:6px 0 10px 6px; }
     .viewport{
       width:100%;
       aspect-ratio: 16 / 10;
@@ -52,217 +40,176 @@
       place-items:center;
       border-radius:12px;
       background:
-        radial-gradient(1200px 600px at 50% 110%, #ece7db, #faf9f3 60%, #ffffff 100%);
-      position:relative;
+        radial-gradient(1400px 620px at 50% 110%, #eae2d1, #faf7f0 55%, #fff 100%);
       overflow:hidden;
     }
-
-    /* Canvas alignment */
-    svg{
-      width:90%;
-      height:auto;
-      overflow:visible;
-    }
-
-    /* Lighting effect on hover */
-    .hover-area{
-      transition: filter 220ms ease, transform 250ms ease;
-      filter: drop-shadow(0 8px 18px rgba(0,0,0,0.12));
-    }
-    .hover-area:hover{
-      filter: drop-shadow(0 12px 28px rgba(0,0,0,0.18));
-      transform: translateY(-1px);
-    }
-
-    /* Spin animation when toggled */
-    .spin{
-      animation: spin 6s linear infinite;
-      transform-origin: 50% 65%;
-    }
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to   { transform: rotate(360deg); }
-    }
-
-    .controls{
-      display:flex;
-      gap:12px;
-      align-items:center;
-      margin-top:10px;
-      flex-wrap:wrap;
-    }
-    button{
-      padding:10px 14px;
-      border-radius:10px;
-      background:#222;
-      color:#fff;
-      border:none;
-      cursor:pointer;
-    }
-    button.secondary{
-      background:#e7e3d9;
-      color:#222;
-    }
-    .hint{
-      font-size:0.9rem;
-      color:#666;
-    }
+    svg{ width:94%; height:auto; overflow:visible; }
+    .hint{ color:#666; font-size:.92rem; margin:10px 6px 0 6px; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="card">
-      <h1>Mokorotlo (Basotho Hat)</h1>
-      <p>Click the hat to toggle a gentle spin. Hover to see a subtle glow.</p>
+      <h1>Mokorotlo (Basotho Straw Hat) – SVG Illustration</h1>
       <div class="viewport">
-        <!-- SVG Scene -->
-        <svg viewBox="0 0 800 500" role="img" aria-label="Mokorotlo Basotho hat illustration">
-          <!-- Ground shadow -->
-          <ellipse cx="400" cy="420" rx="220" ry="28" fill="rgba(0,0,0,0.10)"></ellipse>
+        <svg viewBox="0 0 1000 700" role="img" aria-label="Realistic Basotho Mokorotlo straw hat">
+          <!-- Soft ground shadow -->
+          <ellipse cx="500" cy="560" rx="270" ry="28" fill="rgba(0,0,0,.12)"></ellipse>
 
-          <!-- Group that we spin -->
-          <g id="hat" class="hover-area" tabindex="0" role="button" aria-label="Toggle spin">
-            <!-- Wide brim (ellipse) -->
-            <ellipse cx="400" cy="350" rx="260" ry="60" fill="url(#strawGradient)" stroke="var(--straw-dark)" stroke-width="3" />
-
-            <!-- Brim rim highlight and shadow -->
-            <ellipse cx="400" cy="350" rx="260" ry="60" fill="none" stroke="url(#rimHighlight)" stroke-width="6" opacity="0.45" />
-            <ellipse cx="400" cy="350" rx="260" ry="60" fill="none" stroke="url(#rimShadow)" stroke-width="8" opacity="0.35" />
-
-            <!-- Conical body -->
-            <path d="
-              M 400 110
-              C 365 180, 320 240, 290 300
-              C 270 340, 275 352, 400 352
-              C 525 352, 530 340, 510 300
-              C 480 240, 435 180, 400 110
-            " fill="url(#coneStraw)" stroke="var(--straw-dark)" stroke-width="3" />
-
-            <!-- Decorative bands on the cone -->
-            <path d="M 318 280 C 400 260, 400 260, 482 280" fill="none" stroke="var(--accent)" stroke-width="6" opacity="0.3"/>
-            <path d="M 305 308 C 400 292, 400 292, 495 308" fill="none" stroke="var(--accent)" stroke-width="5" opacity="0.35"/>
-
-            <!-- Top knot (iconic peak) -->
-            <g>
-              <!-- Base ring under the knot -->
-              <ellipse cx="400" cy="126" rx="30" ry="12" fill="url(#ringGradient)" stroke="var(--straw-dark)" stroke-width="2"/>
-
-              <!-- Knot stem -->
-              <path d="M 400 124 C 398 108, 402 94, 400 78" stroke="var(--accent)" stroke-width="6" stroke-linecap="round" />
-
-              <!-- Knot head -->
-              <circle cx="400" cy="70" r="12" fill="var(--accent)"/>
-              <circle cx="400" cy="70" r="12" fill="url(#knotHighlight)" opacity="0.6"/>
-            </g>
-
-            <!-- Woven pattern hints (subtle cross-hatch arcs) -->
-            <g opacity="0.25">
-              <path d="M 330 220 C 400 210, 400 210, 470 220" fill="none" stroke="var(--shadow)" stroke-width="2"/>
-              <path d="M 340 245 C 400 235, 400 235, 460 245" fill="none" stroke="var(--shadow)" stroke-width="2"/>
-              <path d="M 350 265 C 400 257, 400 257, 450 265" fill="none" stroke="var(--shadow)" stroke-width="2"/>
-
-              <path d="M 370 240 C 360 255, 360 255, 350 270" fill="none" stroke="var(--shadow)" stroke-width="2"/>
-              <path d="M 430 240 C 440 255, 440 255, 450 270" fill="none" stroke="var(--shadow)" stroke-width="2"/>
-            </g>
-          </g>
-
-          <!-- Gradients and defs -->
+          <!-- ========== DEFINITIONS ========== -->
           <defs>
-            <radialGradient id="strawGradient" cx="50%" cy="35%" r="65%">
-              <stop offset="0%"  stop-color="#e9d4a3"/>
-              <stop offset="55%" stop-color="#d9be80"/>
-              <stop offset="100%" stop-color="#bf9c5a"/>
-            </radialGradient>
-
-            <linearGradient id="rimHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stop-color="#ffffff"/>
-              <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
-            </linearGradient>
-            <linearGradient id="rimShadow" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stop-color="#6f552a"/>
-              <stop offset="100%" stop-color="#6f552a" stop-opacity="0"/>
-            </linearGradient>
-
-            <linearGradient id="coneStraw" x1="50%" y1="0%" x2="50%" y2="100%">
-              <stop offset="0%"  stop-color="#ecd8a9"/>
-              <stop offset="50%" stop-color="#d9bd7d"/>
+            <!-- Straw gradients -->
+            <linearGradient id="brimGrad" x1="0%" y1="30%" x2="100%" y2="70%">
+              <stop offset="0%"  stop-color="#ead8ac"/>
+              <stop offset="40%" stop-color="#d8be82"/>
               <stop offset="100%" stop-color="#b9924e"/>
             </linearGradient>
-
-            <radialGradient id="ringGradient" cx="50%" cy="40%" r="80%">
-              <stop offset="0%"  stop-color="#f2e4c7"/>
-              <stop offset="60%" stop-color="#d8be8a"/>
-              <stop offset="100%" stop-color="#b28948"/>
-            </radialGradient>
-
-            <radialGradient id="knotHighlight" cx="40%" cy="35%" r="80%">
-              <stop offset="0%"  stop-color="#ffffff" stop-opacity="0.6"/>
-              <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
-            </radialGradient>
-
-            <!-- Soft halo on hover -->
-            <filter id="glow">
-              <feGaussianBlur stdDeviation="6" result="b"/>
-              <feMerge>
-                <feMergeNode in="b"/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
+            <linearGradient id="coneGrad" x1="50%" y1="0%" x2="50%" y2="100%">
+              <stop offset="0%"   stop-color="#efdba9"/>
+              <stop offset="55%"  stop-color="#d5bb7d"/>
+              <stop offset="100%" stop-color="#b08645"/>
+            </linearGradient>
+            <!-- Slight rim highlight -->
+            <linearGradient id="rimHL" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%"   stop-color="#fff" stop-opacity=".55"/>
+              <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+            </linearGradient>
+            <!-- Subtle cone texture (weave impression) -->
+            <pattern id="weaveDiag" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="skewX(-15)">
+              <path d="M0 10 L10 0" stroke="#8a6b36" stroke-opacity=".16" stroke-width="1"/>
+              <path d="M-5 10 L10 -5" stroke="#8a6b36" stroke-opacity=".12" stroke-width="1"/>
+              <path d="M0 15 L15 0" stroke="#8a6b36" stroke-opacity=".08" stroke-width="1"/>
+            </pattern>
+            <!-- Diamond lattice for the decorative band -->
+            <pattern id="diamondPattern" width="22" height="14" patternUnits="userSpaceOnUse">
+              <path d="M11 0 L22 7 L11 14 L0 7 Z" fill="none" stroke="#3c2f1e" stroke-width="1.4" stroke-opacity=".55"/>
+            </pattern>
+            <!-- Mask to confine the diamond pattern to a band around the cone -->
+            <mask id="bandMask">
+              <!-- everything is black (hidden) unless painted white -->
+              <rect x="0" y="0" width="1000" height="700" fill="black"/>
+              <!-- Draw a ring (outer ellipse white, inner ellipse black to punch hole) -->
+              <ellipse cx="500" cy="320" rx="165" ry="44" fill="white"/>
+              <ellipse cx="500" cy="320" rx="165" ry="29" fill="black"/>
+            </mask>
+            <!-- Very light paper-like noise -->
+            <filter id="paperNoise" x="-20%" y="-20%" width="140%" height="140%">
+              <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="5" result="turb"/>
+              <feColorMatrix type="saturate" values="0" />
+              <feComponentTransfer>
+                <feFuncA type="linear" slope="0.035"/>
+              </feComponentTransfer>
+              <feBlend in="SourceGraphic" in2="turb" mode="multiply"/>
             </filter>
           </defs>
+
+          <!-- ========== BRIM ========== -->
+          <!-- Brim base (large oval) -->
+          <ellipse
+            cx="500" cy="500" rx="330" ry="80"
+            fill="url(#brimGrad)"
+            stroke="var(--straw-dark)" stroke-width="4"
+            filter="url(#paperNoise)"
+          />
+          <!-- Brim highlight on upper arc -->
+          <ellipse cx="500" cy="500" rx="330" ry="80"
+                   fill="none" stroke="url(#rimHL)" stroke-width="10" opacity=".45"/>
+
+          <!-- Slight inner shadow (gives a sense that cone meets brim) -->
+          <ellipse cx="500" cy="486" rx="215" ry="48"
+                   fill="rgba(0,0,0,.06)"/>
+
+          <!-- ========== CONE (Main body) ========== -->
+          <!-- Conical body silhouette -->
+          <path id="cone"
+            d="
+              M 500 120
+              C 468 195, 430 265, 390 335
+              C 370 370, 372 388, 500 388
+              C 628 388, 630 370, 610 335
+              C 570 265, 532 195, 500 120
+            "
+            fill="url(#coneGrad)"
+            stroke="var(--straw-dark)" stroke-width="3"
+            filter="url(#paperNoise)"
+          />
+
+          <!-- Subtle woven cross-lines on cone (light touch) -->
+          <g opacity=".22" stroke="#8a6a35" stroke-width="2">
+            <path d="M 430 260 C 500 248, 500 248, 570 260" fill="none"/>
+            <path d="M 415 288 C 500 274, 500 274, 585 288" fill="none"/>
+            <path d="M 405 315 C 500 300, 500 300, 595 315" fill="none"/>
+            <path d="M 455 250 C 440 270, 430 290, 420 312" fill="none"/>
+            <path d="M 545 250 C 560 270, 570 290, 580 312" fill="none"/>
+          </g>
+
+          <!-- ========== DECORATIVE LATTICE BAND ========== -->
+          <!-- Pattern constrained to an elliptical band using a mask -->
+          <g mask="url(#bandMask)">
+            <!-- The pattern is warped by perspective by placing it along a path “strip”:
+                 We fake curvature by repeating a wide path with the pattern fill. -->
+            <ellipse cx="500" cy="320" rx="200" ry="58" fill="url(#diamondPattern)" opacity=".95"/>
+          </g>
+          <!-- Band rim strokes (give the band some edges) -->
+          <ellipse cx="500" cy="320" rx="165" ry="44" fill="none" stroke="#3c2f1e" stroke-width="2" opacity=".35"/>
+          <ellipse cx="500" cy="320" rx="165" ry="29" fill="none" stroke="#3c2f1e" stroke-width="2" opacity=".28"/>
+
+          <!-- ========== FINIAL (Top knot with loop) ========== -->
+          <!-- Base ring under the finial -->
+          <ellipse cx="500" cy="140" rx="34" ry="12"
+                   fill="#e9d6ac" stroke="var(--straw-dark)" stroke-width="2"/>
+
+          <!-- Stem -->
+          <path d="M 500 136 C 498 118, 502 104, 500 88"
+                stroke="var(--accent)" stroke-width="6" stroke-linecap="round" fill="none"/>
+
+          <!-- Looped finial head -->
+          <path d="
+            M 500 70
+            c -12 -2, -22 8, -22 18
+            c 0 10, 10 20, 22 18
+            c 12 2, 22 -8, 22 -18
+            c 0 -10, -10 -20, -22 -18
+            Z
+          " fill="var(--accent)" opacity=".98"/>
+          <path d="
+            M 500 76
+            c -8 -2, -14 5, -14 12
+            c 0 7, 6 14, 14 12
+            c 8 2, 14 -5, 14 -12
+            c 0 -7, -6 -14, -14 -12
+            Z
+          " fill="#fff" opacity=".18"/>
+
+          <!-- Gentle highlight along the right cone face -->
+          <path d="
+            M 520 150
+            C 560 230, 590 290, 608 335
+            C 620 360, 600 378, 500 378
+            C 560 320, 550 230, 520 150
+            Z
+          " fill="#ffffff" opacity=".08"/>
+
         </svg>
       </div>
-
-      <div class="controls">
-        <button id="toggleSpin">Toggle Spin</button>
-        <button id="resetView" class="secondary">Reset View</button>
-        <span class="hint">Tip: click the hat or press Enter when focused.</span>
-      </div>
+      <p class="hint">
+        Need the band thicker/thinner or the finial loop taller? I can tweak the mask and path values to match your photo’s proportions exactly.
+      </p>
     </div>
   </div>
 
   <script>
-    (function(){
-      const hat = document.getElementById('hat');
-      const btn = document.getElementById('toggleSpin');
-      const resetBtn = document.getElementById('resetView');
-
-      let spinning = false;
-
-      function setSpin(on){
-        spinning = on;
-        hat.classList.toggle('spin', spinning);
-        btn.textContent = spinning ? 'Stop Spin' : 'Toggle Spin';
-      }
-
-      // Toggle by clicking the hat or the button
-      hat.addEventListener('click', () => setSpin(!spinning));
-      btn.addEventListener('click', () => setSpin(!spinning));
-
-      // Keyboard accessibility
-      hat.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          setSpin(!spinning);
-        }
-      });
-
-      // Reset minor transforms and stop spin
-      resetBtn.addEventListener('click', () => {
-        setSpin(false);
-        // Optionally, future transforms can be reset here
-      });
-
-      // Optional: subtle hover glow on pointer devices
-      const prefersFine = matchMedia('(pointer: fine)').matches;
-      if (prefersFine){
-        hat.addEventListener('mouseenter', () => {
-          hat.style.filter = 'drop-shadow(0 14px 30px var(--hover-glow))';
-        });
-        hat.addEventListener('mouseleave', () => {
-          hat.style.filter = '';
-        });
-      }
-    })();
+    // Quick knobs if you want to adjust proportions without editing paths:
+    // (You can wire these to UI sliders if needed.)
+    const knobs = {
+      // Example: change band vertical position or thickness
+      bandY: 320,     // move up/down
+      bandOuterRy: 44,// band height (outer)
+      bandInnerRy: 29,// band height (inner opening)
+      coneBaseY: 388  // where cone meets brim visually
+    };
+    // If you want JS-driven adjustments, we can programmatically rewrite attributes here.
+    // For now, the static SVG is tuned to a realistic shape matching your reference.
   </script>
 </body>
 </html>
