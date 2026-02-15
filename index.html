@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Realistic Mokorotlo</title>
+  <title>Refined Mokorotlo</title>
 </head>
 <body>
 <canvas id="mokorotloCanvas" width="600" height="600"></canvas>
@@ -9,18 +9,18 @@
 const canvas = document.getElementById("mokorotloCanvas");
 const ctx = canvas.getContext("2d");
 
-// draw ground shadow
+// Shadow under the hat
 function drawShadow() {
   const grad = ctx.createRadialGradient(300, 450, 10, 300, 450, 150);
   grad.addColorStop(0, "rgba(0,0,0,0.25)");
   grad.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = grad;
   ctx.beginPath();
-  ctx.ellipse(300, 460, 180, 30, 0, 0, 2*Math.PI);
+  ctx.ellipse(300, 460, 170, 25, 0, 0, 2*Math.PI);
   ctx.fill();
 }
 
-// main cone shape
+// Main cone
 function drawCone() {
   const coneGrad = ctx.createLinearGradient(300, 120, 300, 450);
   coneGrad.addColorStop(0, "#E8D4A2");
@@ -28,71 +28,65 @@ function drawCone() {
   ctx.fillStyle = coneGrad;
   ctx.beginPath();
   ctx.moveTo(160, 450);
-  ctx.quadraticCurveTo(300, 100, 440, 450);
+  ctx.quadraticCurveTo(300, 110, 440, 450);
   ctx.closePath();
   ctx.fill();
 }
 
-// brim shape
+// Brim shape
 function drawBrim() {
-  const brimGrad = ctx.createRadialGradient(300, 480, 50, 300, 480, 180);
+  const brimGrad = ctx.createRadialGradient(300, 480, 50, 300, 480, 160);
   brimGrad.addColorStop(0, "#E8D4A2");
   brimGrad.addColorStop(1, "#AD8761");
   ctx.fillStyle = brimGrad;
   ctx.beginPath();
-  ctx.ellipse(300, 480, 180, 50, 0, 0, 2*Math.PI);
+  ctx.ellipse(300, 480, 160, 45, 0, 0, 2*Math.PI);
   ctx.fill();
 }
 
-// colored rings
-function drawRings() {
-  ctx.fillStyle = "#8B0000"; // red band
-  ctx.beginPath();
-  ctx.ellipse(300, 350, 120, 18, 0, 0, 2*Math.PI);
-  ctx.fill();
-  
-  ctx.fillStyle = "#006400"; // green band
-  ctx.beginPath();
-  ctx.ellipse(300, 380, 120, 18, 0, 0, 2*Math.PI);
-  ctx.fill();
-}
-
-// straw texture
+// Straw texture
 function drawStrawTexture() {
-  ctx.strokeStyle = "#B89462";
+  ctx.strokeStyle = "#B89560";
   ctx.lineWidth = 1;
   for(let y = 150; y < 450; y += 14) {
       ctx.beginPath();
-      let leftX = 160 + ((y - 100) / 350) * 280;
-      let rightX = 440 - ((y - 100) / 350) * 280;
+      let leftX = 160 + ((y - 150)/300)*280;
+      let rightX = 440 - ((y - 150)/300)*280;
       ctx.moveTo(leftX, y);
       ctx.lineTo(rightX, y);
       ctx.stroke();
   }
 }
 
-// top tuft loops
+// Colored band around the hat
+function drawBand() {
+  ctx.fillStyle = "#8B0000";
+  ctx.beginPath();
+  ctx.ellipse(300, 360, 120, 18, 0, 0, 2*Math.PI);
+  ctx.fill();
+}
+
+// Top tuft/knob detail
 function drawTuft() {
   ctx.strokeStyle = "#C19A6B";
   ctx.lineWidth = 4;
   ctx.beginPath();
-  ctx.moveTo(300, 100);
-  ctx.lineTo(300, 60);
-  ctx.stroke();
-  
-  ctx.beginPath();
-  ctx.arc(290, 80, 8, 0, Math.PI * 2);
+  ctx.moveTo(300, 110);
+  ctx.lineTo(300, 75);
   ctx.stroke();
   ctx.beginPath();
-  ctx.arc(310, 80, 8, 0, Math.PI * 2);
+  ctx.arc(290, 90, 7, 0, Math.PI*2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(310, 90, 7, 0, Math.PI*2);
   ctx.stroke();
 }
 
-// curved text function
+// Curved text function
 function drawCurvedText(text, cx, cy, radius) {
   ctx.save();
   ctx.translate(cx, cy);
-  ctx.rotate(-Math.PI / 2 + 0.25);
+  ctx.rotate(-Math.PI / 2 + 0.20);
   ctx.fillStyle = "#000080";
   ctx.font = "bold 24px Arial";
   for(let i = 0; i < text.length; i++) {
@@ -104,15 +98,14 @@ function drawCurvedText(text, cx, cy, radius) {
   ctx.restore();
 }
 
-// draw everything
+// Render all
 drawShadow();
 drawBrim();
 drawCone();
-drawRings();
 drawStrawTexture();
+drawBand();
 drawTuft();
 drawCurvedText("LESOTHO", 300, 360, 130);
-
 </script>
 </body>
 </html>
