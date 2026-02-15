@@ -3,16 +3,14 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Mokorotlo (Basotho Hat) — Canvas Drawn</title>
+<title>Mokorotlo (Canvas Drawn) – LESOTHO</title>
 <style>
-  :root{
-    --bg:#f6f4ee;
-  }
+  :root{ --bg:#f6f4ee; }
   html,body{height:100%;margin:0;background:var(--bg);font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#222}
-  .wrap{min-height:100%;display:grid;place-items:center;padding:20px}
+  .wrap{min-height:100%;display:grid;place-items:center;padding:18px}
   .card{width:min(1100px,96vw);background:#fff;border-radius:16px;box-shadow:0 12px 28px rgba(0,0,0,.08);padding:14px}
   h1{font-size:1.05rem;margin:6px 8px 12px}
-  .stage{width:100%;aspect-ratio: 16 / 10;border-radius:12px;overflow:hidden;background:radial-gradient(1200px 520px at 50% 110%, #ece7db, #faf9f3 55%, #ffffff)}
+  .stage{width:100%;aspect-ratio: 3 / 2;border-radius:12px;overflow:hidden;background:radial-gradient(1400px 620px at 50% 110%, #ece7db, #faf9f3 55%, #ffffff)}
   canvas{width:100%;height:100%;display:block}
   .hint{color:#666;font-size:.92rem;margin:10px 8px 4px}
 </style>
@@ -20,365 +18,464 @@
 <body>
   <div class="wrap">
     <div class="card">
-      <h1>Mokorotlo (Basotho Straw Hat) — Drawn with JavaScript (Canvas)</h1>
+      <h1>Mokorotlo (Basotho Straw Hat) — Canvas (no images, no SVG)</h1>
       <div class="stage">
         <canvas id="mokorotlo"></canvas>
       </div>
-      <p class="hint">Canvas only: no images, no SVG. Resize the window—the drawing stays sharp.</p>
+      <p class="hint">Rendered with pure JavaScript on Canvas: cone, bands, scallops, looped finial, and “LESOTHO”.</p>
     </div>
   </div>
 
 <script>
 (() => {
-  /*** CONFIG (tweak if you want small proportion changes) ***/
-  const BASE_W = 1000, BASE_H = 700;       // virtual design space
+  /************** CONFIG – tweak to fine‑tune look **************/
+  const BASE_W = 900, BASE_H = 600;             // virtual canvas units
   const COLORS = {
-    straw1: '#efd9a6', // light straw
-    straw2: '#d8bd7d', // mid straw
-    straw3: '#b68949', // deep straw
-    straw4: '#8a6a35', // dark straw (lines/shadows)
-    accent: '#3b2a16', // dark raffia/finial
+    strawHi: '#efd6a3',
+    strawMd: '#d3b679',
+    strawLo: '#ad8648',
+    strawLine: '#8a6a35',
+    greenBand: '#1e4d3c',      // dark green scallop band
+    redBand: '#b2392f',        // red scallop band
+    textGreen: '#134d3a',      // LESOTHO text color
+    finial: '#7a5a2e',         // top loop/stem
     shadow: 'rgba(0,0,0,0.12)'
+  };
+
+  // Proportions (tuned to the reference angle)
+  const geom = {
+    cx: 450, cy: 360,          // cone center (projected)
+    coneTopY: 90,              // apex y
+    coneBaseY: 380,            // where cone meets brim
+    coneRxTop: 10,             // ellipse radius-x at the very top (visual)
+    coneRxBase: 260,           // ellipse radius-x at the cone base (visual)
+    coneRyBase: 62,            // ellipse radius-y at the cone base (perspective)
+    // Bands (centerline positions)
+    bandTextY: 250,            // “LESOTHO” band
+    bandRedY: 300,             // red scallop band
+    bandGreenY: 350,           // green scallop band
+    // Band ellipse rx/ry scales relative to base
+    bandScaleX: { text:0.62, red:0.78, green:0.92 },
+    bandScaleY: { text:0.35, red:0.48, green:0.58 },
+    // Scallop sizes
+    scallops: { red: 44, green: 48 }, // approximate count
+    scallopOut: { red: 20, green: 24 }, // outward amplitude
   };
 
   const canvas = document.getElementById('mokorotlo');
   const ctx = canvas.getContext('2d');
 
-  // Fit canvas to CSS size at device pixel ratio
   function fitCanvas() {
-    const dpr = Math.max(1, window.devicePixelRatio || 1);
-    const { width, height } = canvas.getBoundingClientRect();
-    canvas.width = Math.max(2, Math.floor(width * dpr));
-    canvas.height = Math.max(2, Math.floor(height * dpr));
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // reset to CSS pixels
+    const dpr = Math.max(1, devicePixelRatio || 1);
+    const rect = canvas.getBoundingClientRect();
+    canvas.width  = Math.max(2, Math.floor(rect.width  * dpr));
+    canvas.height = Math.max(2, Math.floor(rect.height * dpr));
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     draw();
   }
 
-  // Helper: draw ellipse path
-  function ellipsePath(ctx, cx, cy, rx, ry) {
+  /************** Helpers **************/
+  function ellipsePath(cx, cy, rx, ry) {
     ctx.beginPath();
-    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI*2);
   }
 
-  // Cone path (steep straw cone)
-  function conePath(ctx) {
+  function lerp(a,b,t){ return a + (b-a)*t; }
+
+  // Get ellipse radii for a given Y along the cone (linear along height)
+  function radiiAtY(y){
+    const t = (y - geom.coneTopY) / (geom.coneBaseY - geom.coneTopY);
+    const rx = lerp(geom.coneRxTop, geom.coneRxBase, t);
+    const ry = lerp(geom.coneRxTop*0.7, geom.coneRyBase, t);
+    return { rx, ry };
+  }
+
+  // Draw the cone body (gradient + weave + highlight)
+  function drawCone() {
+    // Cone silhouette (side curves approximated with a clipped polygon)
+    // Build a path by sampling radii from top to base
+    const steps = 36;
+    const xsL = [], xsR = [], ys = [];
+    for (let i=0;i<=steps;i++){
+      const y = lerp(geom.coneTopY, geom.coneBaseY, i/steps);
+      const {rx, ry} = radiiAtY(y);
+      // Use rx only (profile), ry is visual squash in y ellipse (handled elsewhere)
+      xsL.push(geom.cx - rx); xsR.push(geom.cx + rx); ys.push(y);
+    }
+
+    // Fill gradient
+    const grad = ctx.createLinearGradient(geom.cx, geom.coneTopY, geom.cx, geom.coneBaseY);
+    grad.addColorStop(0.00, COLORS.strawHi);
+    grad.addColorStop(0.55, COLORS.strawMd);
+    grad.addColorStop(1.00, COLORS.strawLo);
+
+    ctx.save();
+    // Build clipping path around cone
     ctx.beginPath();
-    // This shape matches a steep, handwoven cone
-    ctx.moveTo(500, 120);
-    ctx.bezierCurveTo(468, 195, 428, 270, 385, 350);
-    ctx.bezierCurveTo(370, 380, 375, 400, 500, 400);
-    ctx.bezierCurveTo(625, 400, 630, 380, 615, 350);
-    ctx.bezierCurveTo(572, 270, 532, 195, 500, 120);
+    ctx.moveTo(xsL[0], ys[0]);
+    for (let i=1;i<=steps;i++) ctx.lineTo(xsL[i], ys[i]);
+    for (let i=steps;i>=0;i--) ctx.lineTo(xsR[i], ys[i]);
     ctx.closePath();
-  }
-
-  // Create a simple diamond pattern as a CanvasPattern
-  function createDiamondPattern() {
-    const pw = 22, ph = 14;
-    const p = document.createElement('canvas');
-    p.width = pw; p.height = ph;
-    const pc = p.getContext('2d');
-    pc.strokeStyle = COLORS.accent;
-    pc.globalAlpha = 0.6;
-    pc.lineWidth = 1.4;
-    pc.beginPath();
-    // Diamond centered in tile
-    pc.moveTo(11, 0);
-    pc.lineTo(22, 7);
-    pc.lineTo(11, 14);
-    pc.lineTo(0, 7);
-    pc.closePath();
-    pc.stroke();
-    pc.globalAlpha = 1;
-    return ctx.createPattern(p, 'repeat');
-  }
-
-  // Fine diagonal weave impressions pattern (soft lines)
-  function drawWeaveDiagonals(ctx, bbox, alpha = 0.18) {
-    const { x, y, w, h } = bbox;
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.strokeStyle = COLORS.straw4;
-    ctx.lineWidth = 1;
-
-    // Left-leaning
-    for (let i = -h; i < w + h; i += 12) {
-      ctx.beginPath();
-      ctx.moveTo(x + i, y + h);
-      ctx.lineTo(x + i + h, y);
-      ctx.stroke();
-    }
-    // Right-leaning (lighter)
-    ctx.globalAlpha = alpha * 0.7;
-    for (let i = -h; i < w + h; i += 12) {
-      ctx.beginPath();
-      ctx.moveTo(x + i, y);
-      ctx.lineTo(x + i + h, y + h);
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
-
-  // Subtle horizontal arcs to imply round straw courses
-  function drawWeaveArcs(ctx) {
-    ctx.save();
-    ctx.strokeStyle = COLORS.straw4;
-    ctx.globalAlpha = 0.22;
-    ctx.lineWidth = 2;
-
-    ctx.beginPath();
-    ctx.moveTo(425, 275);
-    ctx.bezierCurveTo(500, 262, 500, 262, 575, 275);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(410, 305);
-    ctx.bezierCurveTo(500, 290, 500, 290, 590, 305);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(400, 332);
-    ctx.bezierCurveTo(500, 315, 500, 315, 600, 332);
-    ctx.stroke();
-
-    ctx.restore();
-  }
-
-  // Main draw routine in a normalized coordinate system
-  function draw() {
-    // Fit the BASE_W x BASE_H design into canvas CSS size
-    const cssW = canvas.getBoundingClientRect().width;
-    const cssH = canvas.getBoundingClientRect().height;
-
-    // Clear
-    ctx.clearRect(0, 0, cssW, cssH);
-
-    // Compute scale and centering
-    const sx = cssW / BASE_W;
-    const sy = cssH / BASE_H;
-    const s = Math.min(sx, sy);
-    const offsetX = (cssW - BASE_W * s) / 2;
-    const offsetY = (cssH - BASE_H * s) / 2;
-
-    ctx.save();
-    ctx.translate(offsetX, offsetY);
-    ctx.scale(s, s);
-
-    // ===== Ground shadow =====
-    ctx.save();
-    ctx.fillStyle = COLORS.shadow;
-    ellipsePath(ctx, 500, 560, 270, 28);
-    ctx.fill();
-    ctx.restore();
-
-    // ===== Brim (large oval) =====
-    // Fill gradient across the brim
-    const brimGrad = ctx.createLinearGradient(160, 520, 840, 560);
-    brimGrad.addColorStop(0.00, COLORS.straw1);
-    brimGrad.addColorStop(0.45, COLORS.straw2);
-    brimGrad.addColorStop(1.00, COLORS.straw3);
-
-    ctx.save();
-    // Brim base
-    ellipsePath(ctx, 500, 520, 360, 88);
-    ctx.fillStyle = brimGrad;
+    ctx.fillStyle = grad;
     ctx.fill();
 
-    // Brim stroke
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = COLORS.straw4;
+    // Outline
+    ctx.strokeStyle = COLORS.strawLine;
+    ctx.lineWidth = 2.5;
     ctx.stroke();
 
-    // Rim highlight (top arc)
-    const rimGrad = ctx.createLinearGradient(500, 432, 500, 608);
-    // transparent to white for upper shine
+    // Weave suggestion — faint diagonal crosshatch
     ctx.save();
     ctx.clip();
-    ctx.globalAlpha = 0.45;
-    ctx.lineWidth = 10;
-    ctx.strokeStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.ellipse(500, 520, 360, 88, 0, Math.PI * 0.85, Math.PI * 0.15, false);
-    ctx.stroke();
-    ctx.restore();
-
-    // Inner shadow where cone meets brim
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = 'rgba(0,0,0,0.08)';
-    ellipsePath(ctx, 500, 505, 230, 52);
-    ctx.fill();
-
-    // Side darkening to hint denser weave/upturn
-    ctx.fillStyle = 'rgba(0,0,0,0.10)';
-    ctx.beginPath();
-    ctx.moveTo(160, 520);
-    ctx.bezierCurveTo(210, 530, 250, 575, 250, 590);
-    ctx.bezierCurveTo(200, 585, 170, 555, 160, 520);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.moveTo(840, 520);
-    ctx.bezierCurveTo(790, 530, 750, 575, 750, 590);
-    ctx.bezierCurveTo(800, 585, 830, 555, 840, 520);
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
-
-    // ===== Cone (main straw body) =====
-    // Cone fill gradient (vertical)
-    const coneGrad = ctx.createLinearGradient(500, 120, 500, 400);
-    coneGrad.addColorStop(0.00, COLORS.straw1);
-    coneGrad.addColorStop(0.55, COLORS.straw2);
-    coneGrad.addColorStop(1.00, COLORS.straw3);
-
-    ctx.save();
-    conePath(ctx);
-    ctx.fillStyle = coneGrad;
-    ctx.fill();
-
-    // Cone outline
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = COLORS.straw4;
-    ctx.stroke();
-
-    // Subtle diagonal weave + arcs inside cone (clipped)
-    ctx.save();
-    conePath(ctx);
-    ctx.clip();
-
-    // Draw diagonal weave impressions
-    drawWeaveDiagonals(ctx, { x: 360, y: 140, w: 280, h: 260 }, 0.18);
-    // Horizontal arcs
-    drawWeaveArcs(ctx);
-
-    // Right-side highlight for directional light
+    drawWeaveDiagonals({x:geom.cx-geom.coneRxBase, y:geom.coneTopY+10, w:geom.coneRxBase*2, h:geom.coneBaseY-geom.coneTopY-20}, 0.18);
+    drawWeaveArcs(); // gentle horizontal arcs
+    // Right-side soft highlight
     ctx.globalAlpha = 0.08;
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = '#fff';
     ctx.beginPath();
-    ctx.moveTo(520, 155);
-    ctx.bezierCurveTo(560, 235, 592, 297, 610, 340);
-    ctx.bezierCurveTo(620, 362, 602, 392, 500, 392);
-    ctx.bezierCurveTo(555, 332, 550, 238, 520, 155);
+    ctx.moveTo(geom.cx+25, 160);
+    ctx.bezierCurveTo(geom.cx+80, 240, geom.cx+115, 300, geom.cx+130, 340);
+    ctx.bezierCurveTo(geom.cx+140, 360, geom.cx+120, 388, geom.cx, 388);
+    ctx.bezierCurveTo(geom.cx+60, 330, geom.cx+55, 238, geom.cx+25, 160);
     ctx.closePath();
     ctx.fill();
     ctx.restore();
-    ctx.restore();
 
-    // ===== Decorative band (diamond lattice ring) =====
+    ctx.restore();
+  }
+
+  function drawWeaveDiagonals(bbox, alpha){
+    const {x,y,w,h} = bbox;
     ctx.save();
-    // Create ring clip using even-odd rule: outer ellipse minus inner ellipse
+    ctx.strokeStyle = COLORS.strawLine;
+    ctx.lineWidth = 1;
+    // left-leaning
+    ctx.globalAlpha = alpha;
+    for (let i=-h; i<w+h; i+=12){
+      ctx.beginPath();
+      ctx.moveTo(x+i, y+h);
+      ctx.lineTo(x+i+h, y);
+      ctx.stroke();
+    }
+    // right-leaning lighter
+    ctx.globalAlpha = alpha*0.7;
+    for (let i=-h; i<w+h; i+=12){
+      ctx.beginPath();
+      ctx.moveTo(x+i, y);
+      ctx.lineTo(x+i+h, y+h);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawWeaveArcs(){
+    ctx.save();
+    ctx.strokeStyle = COLORS.strawLine;
+    ctx.globalAlpha = 0.22;
+    ctx.lineWidth = 1.8;
+
     ctx.beginPath();
-    ctx.ellipse(500, 340, 185, 48, 0, 0, Math.PI * 2);
-    ctx.ellipse(500, 340, 185, 32, 0, 0, Math.PI * 2);
-    // Clip to ring
-    if (typeof ctx.clip === 'function') {
-      try { ctx.clip('evenodd'); } catch(e) { // fallback if evenodd not supported
-        // Fallback: clip to outer, then punch inner with destination-out
-        ctx.save();
-        ctx.beginPath();
-        ctx.ellipse(500, 340, 185, 48, 0, 0, Math.PI * 2);
-        ctx.clip();
-        // Paint pattern
-        ctx.fillStyle = createDiamondPattern();
-        ctx.globalAlpha = 0.95;
-        ctx.fillRect(500-220, 340-62, 440, 124);
-        // Punch inner
-        ctx.globalCompositeOperation = 'destination-out';
-        ctx.beginPath();
-        ctx.ellipse(500, 340, 185, 32, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-        // Draw edges and continue
-        ctx.globalCompositeOperation = 'source-over';
-        ctx.strokeStyle = COLORS.accent;
-        ctx.globalAlpha = 0.35;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.ellipse(500, 340, 185, 48, 0, 0, Math.PI * 2);
+    ctx.moveTo(geom.cx-80, 240);
+    ctx.bezierCurveTo(geom.cx, 228, geom.cx, 228, geom.cx+80, 240);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(geom.cx-100, 270);
+    ctx.bezierCurveTo(geom.cx, 255, geom.cx, 255, geom.cx+100, 270);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(geom.cx-120, 300);
+    ctx.bezierCurveTo(geom.cx, 283, geom.cx, 283, geom.cx+120, 300);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Draw an elliptical ring of scallops
+  function drawScallopBand({cy, rxScale, ryScale, count, amp, color, darkEdge=true}){
+    const rx = geom.coneRxBase * rxScale;
+    const ry = geom.coneRyBase * ryScale;
+    ctx.save();
+
+    // Underlay: a darker core to give depth
+    ctx.fillStyle = color;
+    ctx.globalAlpha = 0.22;
+    ellipsePath(geom.cx, cy, rx, ry);
+    ctx.fill();
+
+    // Scallops around ellipse
+    ctx.globalAlpha = 1;
+    const TWO_PI = Math.PI*2;
+    const step = TWO_PI / count;
+    for (let i=0;i<count;i++){
+      const a = i * step;
+      const px = geom.cx + rx * Math.cos(a);
+      const py = cy      + ry * Math.sin(a);
+      // normal vector (approx) pointing outward
+      const nx = Math.cos(a), ny = Math.sin(a);
+      // scallop end point (outward)
+      const qx = px + nx * amp;
+      const qy = py + ny * amp;
+
+      // draw petal-like shape
+      ctx.beginPath();
+      ctx.moveTo(px, py);
+      // two curves make a leaf/petal
+      ctx.quadraticCurveTo(
+        (px+qx)/2 - ny*amp*0.25,
+        (py+qy)/2 + nx*amp*0.25,
+        qx, qy
+      );
+      ctx.quadraticCurveTo(
+        (px+qx)/2 + ny*amp*0.25,
+        (py+qy)/2 - nx*amp*0.25,
+        px, py
+      );
+      ctx.closePath();
+
+      // fill with gradient-ish shading
+      const g = ctx.createRadialGradient(px, py, 0, px, py, amp);
+      g.addColorStop(0, shade(color, 0.12));
+      g.addColorStop(0.7, color);
+      g.addColorStop(1, shade(color, -0.22));
+      ctx.fillStyle = g;
+      ctx.fill();
+
+      if (darkEdge){
+        ctx.strokeStyle = shade(color, -0.35);
+        ctx.lineWidth = 1.4;
+        ctx.globalAlpha = 0.85;
         ctx.stroke();
-        ctx.globalAlpha = 0.28;
-        ctx.beginPath();
-        ctx.ellipse(500, 340, 185, 32, 0, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.restore();
-        // Skip the even-odd path below
-        drawFinial(); // draw finial and exit
-        ctx.restore();
-        return;
+        ctx.globalAlpha = 1;
       }
     }
 
-    // Fill the ring with a repeated diamond pattern
-    ctx.fillStyle = createDiamondPattern();
-    ctx.globalAlpha = 0.95;
-    // Fill a rectangle covering the band area (clipped to the ring)
-    ctx.fillRect(500-220, 340-62, 440, 124);
-
-    // Band edge strokes for crispness
-    ctx.globalAlpha = 1;
-    ctx.strokeStyle = COLORS.accent;
-    ctx.lineWidth = 2;
+    // Top and bottom band edges
     ctx.globalAlpha = 0.35;
-    ctx.beginPath();
-    ctx.ellipse(500, 340, 185, 48, 0, 0, Math.PI * 2);
+    ctx.strokeStyle = shade(color, -0.35);
+    ctx.lineWidth = 2;
+    ellipsePath(geom.cx, cy, rx, ry);
     ctx.stroke();
     ctx.globalAlpha = 0.28;
-    ctx.beginPath();
-    ctx.ellipse(500, 340, 185, 32, 0, 0, Math.PI * 2);
+    ellipsePath(geom.cx, cy, rx*0.96, ry*0.86);
     ctx.stroke();
 
     ctx.restore();
-
-    // ===== Finial (looped top) =====
-    drawFinial();
-
-    ctx.restore(); // end of normalized drawing
-
-    // ---- Finial function (uses base coords) ----
-    function drawFinial(){
-      ctx.save();
-
-      // Base ring under finial
-      ctx.fillStyle = COLORS.straw1;
-      ctx.strokeStyle = COLORS.straw4;
-      ctx.lineWidth = 2;
-      ellipsePath(ctx, 500, 144, 34, 12);
-      ctx.fill();
-      ctx.stroke();
-
-      // Stem
-      ctx.strokeStyle = COLORS.accent;
-      ctx.lineWidth = 6;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(500, 140);
-      ctx.bezierCurveTo(498, 118, 502, 104, 500, 90);
-      ctx.stroke();
-
-      // Looped head (ring) — stroke-only ellipse
-      ctx.lineWidth = 8;
-      ctx.beginPath();
-      ctx.ellipse(500, 78, 18, 14, 0, 0, Math.PI * 2);
-      ctx.stroke();
-
-      // Small highlight on right side of loop
-      ctx.strokeStyle = 'rgba(255,255,255,0.25)';
-      ctx.lineWidth = 4;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      // Arc segment on right side
-      const rx=14, ry=10;
-      // Draw a short arc path by approximating with a curve
-      ctx.moveTo(510, 66);
-      ctx.bezierCurveTo(514, 70, 514, 86, 510, 90);
-      ctx.stroke();
-
-      ctx.restore();
-    }
   }
 
-  // Initial draw & on resize
+  // Utility: lighten/darken a hex color by fraction (-1..+1)
+  function shade(hex, amt){
+    const h = hex.replace('#','');
+    const r = parseInt(h.substring(0,2),16);
+    const g = parseInt(h.substring(2,4),16);
+    const b = parseInt(h.substring(4,6),16);
+    const adj = v => Math.max(0,Math.min(255, Math.round(v + 255*amt)));
+    const rr = adj(r), gg = adj(g), bb = adj(b);
+    return '#'+[rr,gg,bb].map(v=>v.toString(16).padStart(2,'0')).join('');
+  }
+
+  // Draw LESOTHO as block letters along a gentle ellipse
+  function drawLesothoText() {
+    const cy = geom.bandTextY;
+    const rx = geom.coneRxBase * geom.bandScaleX.text;
+    const ry = geom.coneRyBase * geom.bandScaleY.text;
+
+    // The photo text is quite blocky. We'll draw vector letter glyphs manually so
+    // we control proportions (no external fonts). Size is normalized to 1, then scaled.
+    const letter = (cmds, scale, ox, oy, rot=0) => {
+      ctx.save();
+      ctx.translate(ox, oy);
+      ctx.rotate(rot);
+      ctx.scale(scale, scale);
+      ctx.beginPath();
+      for (const c of cmds){
+        if (c.t==='m') ctx.moveTo(c.x, c.y);
+        else if (c.t==='l') ctx.lineTo(c.x, c.y);
+        else if (c.t==='r') ctx.rect(c.x, c.y, c.w, c.h);
+      }
+      ctx.stroke();
+      ctx.restore();
+    };
+
+    // Basic block glyphs made from rectangles/lines (size around 100×100 units)
+    const stroke = (scale, ox, oy, rot, cmds)=>letter(cmds, scale, ox, oy, rot);
+    const glyphs = {
+      'L': [{t:'r',x:0,y:0,w:18,h:80},{t:'r',x:0,y:62,w:60,h:18}],
+      'E': [{t:'r',x:0,y:0,w:18,h:80},{t:'r',x:0,y:0,w:60,h:18},{t:'r',x:0,y:31,w:48,h:18},{t:'r',x:0,y:62,w:60,h:18}],
+      'S': [{t:'r',x:0,y:0,w:60,h:18},{t:'r',x:0,y:0,w:18,h:40},{t:'r',x:0,y:31,w:60,h:18},{t:'r',x:42,y:40,w:18,h:40},{t:'r',x:0,y:62,w:60,h:18}],
+      'O': [{t:'r',x:0,y:0,w:18,h:80},{t:'r',x:42,y:0,w:18,h:80},{t:'r',x:0,y:0,w:60,h:18},{t:'r',x:0,y:62,w:60,h:18}],
+      'T': [{t:'r',x:0,y:0,w:66,h:18},{t:'r',x:24,y:0,w:18,h:80}],
+      'H': [{t:'r',x:0,y:0,w:18,h:80},{t:'r',x:42,y:0,w:18,h:80},{t:'r',x:0,y:31,w:60,h:18}],
+    };
+
+    const text = 'LESOTHO';
+    const letterW = 70;     // spacing base
+    const scale = 0.9;      // base glyph scale
+    const totalW = text.length * letterW;
+    const startA = -Math.PI*0.02;   // slight tilt to match perspective
+    const spanA  = Math.PI*0.20;    // arc span where text sits
+    const a0 = -spanA/2 + startA;
+
+    ctx.save();
+    ctx.strokeStyle = COLORS.textGreen;
+    ctx.lineWidth = 4;
+    ctx.lineJoin = 'miter';
+    ctx.lineCap = 'butt';
+
+    for (let i=0;i<text.length;i++){
+      const ch = text[i];
+      const t = (i + 0.5)/text.length; // 0..1 center each char
+      const a = a0 + t * spanA;
+      const px = geom.cx + rx * Math.cos(a);
+      const py = cy      + ry * Math.sin(a);
+      const tangent = Math.atan2(ry*Math.cos(a), -rx*Math.sin(a)); // along ellipse
+      const rot = tangent; // align baseline with ellipse tangent
+
+      const cmds = glyphs[ch];
+      if (!cmds) continue;
+      // Shift so glyphs sit on baseline: we draw around center-left origin
+      const s = scale * 0.9;
+      const offx = -35, offy = -40; // center the 70×80 glyph box
+      ctx.save();
+      ctx.translate(px, py);
+      ctx.rotate(rot);
+      stroke(s, offx, offy, 0, cmds);
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  // Top finial with multiple loops
+  function drawFinial(){
+    const baseY = 128;
+    ctx.save();
+    // Base ring
+    ctx.fillStyle = COLORS.strawHi;
+    ctx.strokeStyle = COLORS.strawLine;
+    ctx.lineWidth = 2;
+    ellipsePath(geom.cx, 144, 30, 10);
+    ctx.fill(); ctx.stroke();
+
+    // Stem
+    ctx.strokeStyle = COLORS.finial;
+    ctx.lineWidth = 6;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(geom.cx, 142);
+    ctx.bezierCurveTo(geom.cx-2, 122, geom.cx+2, 108, geom.cx, 92);
+    ctx.stroke();
+
+    // Twisted loops
+    ctx.lineWidth = 5.5;
+    const loops = [
+      {dx:-16, h:26, w:18},
+      {dx: 16, h:24, w:18},
+      {dx:-6,  h:30, w:20},
+      {dx:  8, h:28, w:18}
+    ];
+    ctx.strokeStyle = COLORS.finial;
+    for (const L of loops){
+      ctx.beginPath();
+      ctx.ellipse(geom.cx+L.dx, baseY, L.w, L.h, Math.random()*0.2-0.1, 0, Math.PI*2);
+      ctx.stroke();
+    }
+    // Top knot
+    ctx.beginPath();
+    ctx.arc(geom.cx, 88, 8, 0, Math.PI*2);
+    ctx.fillStyle = COLORS.finial;
+    ctx.fill();
+
+    // Light highlight
+    ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.arc(geom.cx+8, 78, 6, Math.PI*0.2, Math.PI*1.2);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  // Ground / table shadow under hat
+  function drawShadow(){
+    ctx.save();
+    ctx.fillStyle = COLORS.shadow;
+    ellipsePath(geom.cx, geom.coneBaseY+40, 210, 22);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Subtle brim hint (the photo shows little brim; keep tiny)
+  function drawBrim(){
+    const rx = geom.coneRxBase * 1.02;
+    const ry = geom.coneRyBase * 0.75;
+    const cy = geom.coneBaseY + 2;
+
+    const g = ctx.createLinearGradient(geom.cx - rx, cy, geom.cx + rx, cy);
+    g.addColorStop(0, COLORS.strawHi);
+    g.addColorStop(0.5, COLORS.strawMd);
+    g.addColorStop(1, COLORS.strawLo);
+
+    ctx.save();
+    ellipsePath(geom.cx, cy, rx, ry);
+    ctx.fillStyle = g;
+    ctx.fill();
+
+    ctx.globalAlpha = 0.5;
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = COLORS.strawLine;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawBands(){
+    // Red scalloped band (inner)
+    drawScallopBand({
+      cy: geom.bandRedY,
+      rxScale: geom.bandScaleX.red,
+      ryScale: geom.bandScaleY.red,
+      count: geom.scallops.red,
+      amp: geom.scallopOut.red,
+      color: COLORS.redBand
+    });
+
+    // Green scalloped band (outer)
+    drawScallopBand({
+      cy: geom.bandGreenY,
+      rxScale: geom.bandScaleX.green,
+      ryScale: geom.bandScaleY.green,
+      count: geom.scallops.green,
+      amp: geom.scallopOut.green,
+      color: COLORS.greenBand
+    });
+  }
+
+  function draw() {
+    // Clear
+    const w = canvas.getBoundingClientRect().width;
+    const h = canvas.getBoundingClientRect().height;
+    ctx.clearRect(0,0,w,h);
+
+    // Normalize to BASE coordinate space and center
+    const sx = w / BASE_W;
+    const sy = h / BASE_H;
+    const s  = Math.min(sx, sy);
+    const ox = (w - BASE_W*s)/2;
+    const oy = (h - BASE_H*s)/2;
+    ctx.save();
+    ctx.translate(ox, oy);
+    ctx.scale(s, s);
+
+    drawShadow();
+    drawBrim();
+    drawCone();
+    drawBands();
+    drawLesothoText();
+    drawFinial();
+
+    ctx.restore();
+  }
+
+  // Kickoff
   window.addEventListener('resize', fitCanvas);
   fitCanvas();
 })();
