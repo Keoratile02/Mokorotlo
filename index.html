@@ -1,267 +1,386 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Mokorotlo (Basotho Hat) – Exact Style</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Mokorotlo (Basotho Hat) — Canvas Drawn</title>
 <style>
   :root{
-    /* Tunable palette for straw & accents */
-    --straw-1:#efd9a6;   /* light straw */
-    --straw-2:#d8bd7d;   /* mid straw */
-    --straw-3:#b68949;   /* deep straw */
-    --straw-4:#8a6a35;   /* shadow straw */
-    --accent:#3b2a16;    /* dark reed/raffia accent */
-    --bg:#f6f2e8;
+    --bg:#f6f4ee;
   }
-  html,body{height:100%;margin:0;background:var(--bg);
-    font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#222}
-  .wrap{min-height:100%;display:grid;place-items:center;padding:22px}
-  .card{width:min(1100px,96vw);background:#fff;border-radius:16px;box-shadow:0 10px 26px rgba(0,0,0,.08);padding:16px}
-  h1{font-size:1.1rem;margin:4px 8px 10px}
-  .viewport{width:100%;aspect-ratio: 16 / 10;display:grid;place-items:center;border-radius:12px;overflow:hidden;
-    background:radial-gradient(1200px 520px at 50% 110%, #ece5d5, #fbf8f1 55%, #fff)}
-  svg{width:96%;height:auto;overflow:visible}
-
-  .controls{display:flex;flex-wrap:wrap;gap:8px;margin:10px 8px 0}
-  button{border:none;background:#222;color:#fff;border-radius:10px;padding:9px 12px;cursor:pointer}
-  button.secondary{background:#ece7db;color:#222}
+  html,body{height:100%;margin:0;background:var(--bg);font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#222}
+  .wrap{min-height:100%;display:grid;place-items:center;padding:20px}
+  .card{width:min(1100px,96vw);background:#fff;border-radius:16px;box-shadow:0 12px 28px rgba(0,0,0,.08);padding:14px}
+  h1{font-size:1.05rem;margin:6px 8px 12px}
+  .stage{width:100%;aspect-ratio: 16 / 10;border-radius:12px;overflow:hidden;background:radial-gradient(1200px 520px at 50% 110%, #ece7db, #faf9f3 55%, #ffffff)}
+  canvas{width:100%;height:100%;display:block}
   .hint{color:#666;font-size:.92rem;margin:10px 8px 4px}
 </style>
 </head>
 <body>
   <div class="wrap">
     <div class="card">
-      <h1>Mokorotlo (Basotho Straw Hat) — Exact Style</h1>
-      <div class="viewport">
-        <svg viewBox="0 0 1000 720" role="img" aria-label="Basotho Mokorotlo hat with oval brim, steep straw cone, lattice band, and looped finial">
-          <!-- Ground shadow -->
-          <ellipse cx="500" cy="600" rx="290" ry="30" fill="rgba(0,0,0,.12)"></ellipse>
-
-          <!-- ====== DEFS ====== -->
-          <defs>
-            <!-- Brim gradient -->
-            <linearGradient id="brimGrad" x1="0%" y1="30%" x2="100%" y2="70%">
-              <stop offset="0%"  stop-color="var(--straw-1)"/>
-              <stop offset="45%" stop-color="var(--straw-2)"/>
-              <stop offset="100%" stop-color="var(--straw-3)"/>
-            </linearGradient>
-
-            <!-- Cone gradient -->
-            <linearGradient id="coneGrad" x1="50%" y1="0%" x2="50%" y2="100%">
-              <stop offset="0%"   stop-color="var(--straw-1)"/>
-              <stop offset="55%"  stop-color="var(--straw-2)"/>
-              <stop offset="100%" stop-color="var(--straw-3)"/>
-            </linearGradient>
-
-            <!-- Rim highlight -->
-            <linearGradient id="rimHL" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stop-color="#fff" stop-opacity=".55"/>
-              <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
-            </linearGradient>
-
-            <!-- Subtle paper/noise texture to avoid plasticky look -->
-            <filter id="paperNoise" x="-20%" y="-20%" width="140%" height="140%">
-              <feTurbulence type="fractalNoise" baseFrequency="1.0" numOctaves="2" seed="8" result="turb"/>
-              <feColorMatrix type="saturate" values="0"/>
-              <feComponentTransfer>
-                <feFuncA type="linear" slope="0.035"/>
-              </feComponentTransfer>
-              <feBlend in="SourceGraphic" in2="turb" mode="multiply"/>
-            </filter>
-
-            <!-- Fine weave impressions for cone -->
-            <pattern id="diagA" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="skewX(-12)">
-              <path d="M0 10 L10 0" stroke="var(--straw-4)" stroke-opacity=".16" stroke-width="1"/>
-              <path d="M-5 10 L10 -5" stroke="var(--straw-4)" stroke-opacity=".10" stroke-width="1"/>
-            </pattern>
-            <pattern id="diagB" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="skewX(12)">
-              <path d="M0 10 L10 0" stroke="var(--straw-4)" stroke-opacity=".10" stroke-width="1"/>
-            </pattern>
-
-            <!-- Diamond lattice band -->
-            <pattern id="diamondPattern" width="22" height="14" patternUnits="userSpaceOnUse">
-              <path d="M11 0 L22 7 L11 14 L0 7 Z"
-                    fill="none" stroke="var(--accent)" stroke-width="1.4" stroke-opacity=".6"/>
-            </pattern>
-            <!-- Mask that limits the lattice to a thin elliptical ring -->
-            <mask id="bandMask">
-              <rect x="0" y="0" width="1000" height="720" fill="black"/>
-              <!-- Outer edge of band (white shows) -->
-              <ellipse id="bandOuter" cx="500" cy="340" rx="185" ry="48" fill="white"/>
-              <!-- Inner hole (black hides) -->
-              <ellipse id="bandInner" cx="500" cy="340" rx="185" ry="32" fill="black"/>
-            </mask>
-          </defs>
-
-          <!-- ====== BRIM ====== -->
-          <!-- Base oval brim -->
-          <ellipse
-            cx="500" cy="520" rx="360" ry="88"
-            fill="url(#brimGrad)"
-            stroke="var(--straw-4)" stroke-width="4"
-            filter="url(#paperNoise)"
-          />
-          <!-- Slight rim highlight -->
-          <ellipse cx="500" cy="520" rx="360" ry="88"
-                   fill="none" stroke="url(#rimHL)" stroke-width="10" opacity=".45"/>
-          <!-- Inner shadow (where cone meets brim) -->
-          <ellipse cx="500" cy="505" rx="230" ry="52" fill="rgba(0,0,0,.08)"/>
-
-          <!-- Soft darker edges at left/right to mimic upturned/denser weave -->
-          <path d="
-            M 160 520
-            C 210 530, 250 575, 250 590
-            C 200 585, 170 555, 160 520 Z
-          " fill="rgba(0,0,0,.10)"/>
-          <path d="
-            M 840 520
-            C 790 530, 750 575, 750 590
-            C 800 585, 830 555, 840 520 Z
-          " fill="rgba(0,0,0,.10)"/>
-
-          <!-- ====== CONE ====== -->
-          <!-- Main conical silhouette: steep, handwoven look -->
-          <path id="cone"
-            d="
-              M 500 120
-              C 468 195, 428 270, 385 350
-              C 370 380, 375 400, 500 400
-              C 625 400, 630 380, 615 350
-              C 572 270, 532 195, 500 120
-            "
-            fill="url(#coneGrad)"
-            stroke="var(--straw-4)" stroke-width="3"
-            filter="url(#paperNoise)"
-          />
-          <!-- Subtle weave impressions (two diagonals + a few arcs) -->
-          <g opacity=".25">
-            <rect x="360" y="140" width="280" height="260" fill="url(#diagA)" clip-path="path('M 500 120 C 468 195, 428 270, 385 350 C 370 380, 375 400, 500 400 C 625 400, 630 380, 615 350 C 572 270, 532 195, 500 120 Z')"/>
-            <rect x="360" y="140" width="280" height="260" fill="url(#diagB)" clip-path="path('M 500 120 C 468 195, 428 270, 385 350 C 370 380, 375 400, 500 400 C 625 400, 630 380, 615 350 C 572 270, 532 195, 500 120 Z')"/>
-            <!-- Gentle horizontal arcs (suggest round courses of straw) -->
-            <path d="M 425 275 C 500 262, 500 262, 575 275" fill="none" stroke="var(--straw-4)" stroke-width="2"/>
-            <path d="M 410 305 C 500 290, 500 290, 590 305" fill="none" stroke="var(--straw-4)" stroke-width="2"/>
-            <path d="M 400 332 C 500 315, 500 315, 600 332" fill="none" stroke="var(--straw-4)" stroke-width="2"/>
-          </g>
-
-          <!-- ====== DECORATIVE LATTICE BAND ====== -->
-          <!-- Diamond lattice constrained to a thin elliptical band -->
-          <g mask="url(#bandMask)" opacity=".95">
-            <ellipse id="bandPatternCarrier" cx="500" cy="340" rx="220" ry="62" fill="url(#diamondPattern)"/>
-          </g>
-          <!-- Band edge strokes for crispness -->
-          <ellipse cx="500" cy="340" rx="185" ry="48" fill="none" stroke="var(--accent)" stroke-width="2" opacity=".35"/>
-          <ellipse cx="500" cy="340" rx="185" ry="32" fill="none" stroke="var(--accent)" stroke-width="2" opacity=".28"/>
-
-          <!-- ====== FINIAL (looped top) ====== -->
-          <!-- Base ring under finial -->
-          <ellipse cx="500" cy="144" rx="34" ry="12"
-                   fill="var(--straw-1)" stroke="var(--straw-4)" stroke-width="2"/>
-          <!-- Stem -->
-          <path d="M 500 140 C 498 118, 502 104, 500 90"
-                stroke="var(--accent)" stroke-width="6" stroke-linecap="round" fill="none"/>
-          <!-- Looped head (ring) using stroke; center remains open -->
-          <g>
-            <ellipse cx="500" cy="78" rx="18" ry="14"
-                     fill="none" stroke="var(--accent)" stroke-width="8" />
-            <!-- Light highlight on the right side of the loop -->
-            <path d="M 510 66 A 14 10 0 0 1 510 90"
-                  stroke="#fff" stroke-opacity=".25" stroke-width="4" fill="none" stroke-linecap="round"/>
-          </g>
-
-          <!-- Right-side cone highlight (gives directional light like reference) -->
-          <path d="
-            M 520 155
-            C 560 235, 592 297, 610 340
-            C 620 362, 602 392, 500 392
-            C 555 332, 550 238, 520 155
-            Z
-          " fill="#fff" opacity=".08"/>
-        </svg>
+      <h1>Mokorotlo (Basotho Straw Hat) — Drawn with JavaScript (Canvas)</h1>
+      <div class="stage">
+        <canvas id="mokorotlo"></canvas>
       </div>
-
-      <div class="controls">
-        <button id="warmUp">Warmth +10%</button>
-        <button id="coolDown" class="secondary">Warmth −10%</button>
-        <button id="bandUp">Band ↑</button>
-        <button id="bandDown" class="secondary">Band ↓</button>
-        <button id="thickerBand">Band Thicker</button>
-        <button id="thinnerBand" class="secondary">Band Thinner</button>
-      </div>
-      <p class="hint">
-        Tip: tweak warmth to match your photo’s color temperature. I can also hard‑code exact proportions if you share a couple of target measurements (e.g., brim width vs cone height).
-      </p>
+      <p class="hint">Canvas only: no images, no SVG. Resize the window—the drawing stays sharp.</p>
     </div>
   </div>
 
 <script>
 (() => {
-  // Simple color warmth adjustment by nudging gradient stops toward deeper straw
-  let warmth = 0; // -50..+50 (visual scale)
-  const svg = document.querySelector('svg');
-  const brimGrad = svg.querySelector('#brimGrad');
-  const coneGrad = svg.querySelector('#coneGrad');
+  /*** CONFIG (tweak if you want small proportion changes) ***/
+  const BASE_W = 1000, BASE_H = 700;       // virtual design space
+  const COLORS = {
+    straw1: '#efd9a6', // light straw
+    straw2: '#d8bd7d', // mid straw
+    straw3: '#b68949', // deep straw
+    straw4: '#8a6a35', // dark straw (lines/shadows)
+    accent: '#3b2a16', // dark raffia/finial
+    shadow: 'rgba(0,0,0,0.12)'
+  };
 
-  function setWarmth(delta){
-    warmth = Math.max(-50, Math.min(50, warmth + delta));
-    // As warmth increases, bias stops toward var(--straw-3)
-    const t = (warmth + 50) / 100; // 0..1
-    // Interpolate helper between two CSS colors using simple channel mix
-    const mix = (c1, c2, p) => {
-      const a = c1.match(/\w\w/g).map(x => parseInt(x,16));
-      const b = c2.match(/\w\w/g).map(x => parseInt(x,16));
-      const m = a.map((v,i)=>Math.round(v*(1-p)+b*p));
-      return '#'+m.map(v=>v.toString(16).padStart(2,'0')).join('');
-    };
-    const s1 = getComputedStyle(document.documentElement).getPropertyValue('--straw-1').trim().replace('#','');
-    const s2 = getComputedStyle(document.documentElement).getPropertyValue('--straw-2').trim().replace('#','');
-    const s3 = getComputedStyle(document.documentElement).getPropertyValue('--straw-3').trim().replace('#','');
+  const canvas = document.getElementById('mokorotlo');
+  const ctx = canvas.getContext('2d');
 
-    const cTop   = mix(s1, s3, t*0.55);
-    const cMid   = mix(s2, s3, t*0.55);
-    const cBase  = mix(s3, s3, t*0.55);
-
-    // Update gradient stops (brim & cone share similar palette)
-    const [b0,b1,b2] = brimGrad.querySelectorAll('stop');
-    const [c0,c1,c2] = coneGrad.querySelectorAll('stop');
-    b0.setAttribute('stop-color', cTop);
-    b1.setAttribute('stop-color', cMid);
-    b2.setAttribute('stop-color', cBase);
-    c0.setAttribute('stop-color', cTop);
-    c1.setAttribute('stop-color', cMid);
-    c2.setAttribute('stop-color', cBase);
+  // Fit canvas to CSS size at device pixel ratio
+  function fitCanvas() {
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    const { width, height } = canvas.getBoundingClientRect();
+    canvas.width = Math.max(2, Math.floor(width * dpr));
+    canvas.height = Math.max(2, Math.floor(height * dpr));
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // reset to CSS pixels
+    draw();
   }
 
-  // Band vertical position & thickness controls
-  const bandOuter = svg.querySelector('#bandOuter');
-  const bandInner = svg.querySelector('#bandInner');
-
-  function shiftBand(dy){
-    const cy = parseFloat(bandOuter.getAttribute('cy'));
-    bandOuter.setAttribute('cy', cy + dy);
-    bandInner.setAttribute('cy', cy + dy);
-    // Also move the visible pattern carrier to keep alignment
-    const carrier = svg.querySelector('#bandPatternCarrier');
-    const ccy = parseFloat(carrier.getAttribute('cy'));
-    carrier.setAttribute('cy', ccy + dy);
-  }
-  function thickenBand(dRy){
-    const oy = parseFloat(bandOuter.getAttribute('ry'));
-    const iy = parseFloat(bandInner.getAttribute('ry'));
-    // Ensure inner stays smaller than outer
-    const newOy = Math.max(20, oy + dRy);
-    const newIy = Math.max(10, Math.min(newOy - 12, iy + (dRy * 0.7)));
-    bandOuter.setAttribute('ry', newOy);
-    bandInner.setAttribute('ry', newIy);
+  // Helper: draw ellipse path
+  function ellipsePath(ctx, cx, cy, rx, ry) {
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
   }
 
-  // Bind buttons
-  document.getElementById('warmUp').addEventListener('click', ()=>setWarmth(+10));
-  document.getElementById('coolDown').addEventListener('click', ()=>setWarmth(-10));
-  document.getElementById('bandUp').addEventListener('click', ()=>shiftBand(-4));
-  document.getElementById('bandDown').addEventListener('click', ()=>shiftBand(+4));
-  document.getElementById('thickerBand').addEventListener('click', ()=>thickenBand(+3));
-  document.getElementById('thinnerBand').addEventListener('click', ()=>thickenBand(-3));
+  // Cone path (steep straw cone)
+  function conePath(ctx) {
+    ctx.beginPath();
+    // This shape matches a steep, handwoven cone
+    ctx.moveTo(500, 120);
+    ctx.bezierCurveTo(468, 195, 428, 270, 385, 350);
+    ctx.bezierCurveTo(370, 380, 375, 400, 500, 400);
+    ctx.bezierCurveTo(625, 400, 630, 380, 615, 350);
+    ctx.bezierCurveTo(572, 270, 532, 195, 500, 120);
+    ctx.closePath();
+  }
+
+  // Create a simple diamond pattern as a CanvasPattern
+  function createDiamondPattern() {
+    const pw = 22, ph = 14;
+    const p = document.createElement('canvas');
+    p.width = pw; p.height = ph;
+    const pc = p.getContext('2d');
+    pc.strokeStyle = COLORS.accent;
+    pc.globalAlpha = 0.6;
+    pc.lineWidth = 1.4;
+    pc.beginPath();
+    // Diamond centered in tile
+    pc.moveTo(11, 0);
+    pc.lineTo(22, 7);
+    pc.lineTo(11, 14);
+    pc.lineTo(0, 7);
+    pc.closePath();
+    pc.stroke();
+    pc.globalAlpha = 1;
+    return ctx.createPattern(p, 'repeat');
+  }
+
+  // Fine diagonal weave impressions pattern (soft lines)
+  function drawWeaveDiagonals(ctx, bbox, alpha = 0.18) {
+    const { x, y, w, h } = bbox;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = COLORS.straw4;
+    ctx.lineWidth = 1;
+
+    // Left-leaning
+    for (let i = -h; i < w + h; i += 12) {
+      ctx.beginPath();
+      ctx.moveTo(x + i, y + h);
+      ctx.lineTo(x + i + h, y);
+      ctx.stroke();
+    }
+    // Right-leaning (lighter)
+    ctx.globalAlpha = alpha * 0.7;
+    for (let i = -h; i < w + h; i += 12) {
+      ctx.beginPath();
+      ctx.moveTo(x + i, y);
+      ctx.lineTo(x + i + h, y + h);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // Subtle horizontal arcs to imply round straw courses
+  function drawWeaveArcs(ctx) {
+    ctx.save();
+    ctx.strokeStyle = COLORS.straw4;
+    ctx.globalAlpha = 0.22;
+    ctx.lineWidth = 2;
+
+    ctx.beginPath();
+    ctx.moveTo(425, 275);
+    ctx.bezierCurveTo(500, 262, 500, 262, 575, 275);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(410, 305);
+    ctx.bezierCurveTo(500, 290, 500, 290, 590, 305);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(400, 332);
+    ctx.bezierCurveTo(500, 315, 500, 315, 600, 332);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  // Main draw routine in a normalized coordinate system
+  function draw() {
+    // Fit the BASE_W x BASE_H design into canvas CSS size
+    const cssW = canvas.getBoundingClientRect().width;
+    const cssH = canvas.getBoundingClientRect().height;
+
+    // Clear
+    ctx.clearRect(0, 0, cssW, cssH);
+
+    // Compute scale and centering
+    const sx = cssW / BASE_W;
+    const sy = cssH / BASE_H;
+    const s = Math.min(sx, sy);
+    const offsetX = (cssW - BASE_W * s) / 2;
+    const offsetY = (cssH - BASE_H * s) / 2;
+
+    ctx.save();
+    ctx.translate(offsetX, offsetY);
+    ctx.scale(s, s);
+
+    // ===== Ground shadow =====
+    ctx.save();
+    ctx.fillStyle = COLORS.shadow;
+    ellipsePath(ctx, 500, 560, 270, 28);
+    ctx.fill();
+    ctx.restore();
+
+    // ===== Brim (large oval) =====
+    // Fill gradient across the brim
+    const brimGrad = ctx.createLinearGradient(160, 520, 840, 560);
+    brimGrad.addColorStop(0.00, COLORS.straw1);
+    brimGrad.addColorStop(0.45, COLORS.straw2);
+    brimGrad.addColorStop(1.00, COLORS.straw3);
+
+    ctx.save();
+    // Brim base
+    ellipsePath(ctx, 500, 520, 360, 88);
+    ctx.fillStyle = brimGrad;
+    ctx.fill();
+
+    // Brim stroke
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = COLORS.straw4;
+    ctx.stroke();
+
+    // Rim highlight (top arc)
+    const rimGrad = ctx.createLinearGradient(500, 432, 500, 608);
+    // transparent to white for upper shine
+    ctx.save();
+    ctx.clip();
+    ctx.globalAlpha = 0.45;
+    ctx.lineWidth = 10;
+    ctx.strokeStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.ellipse(500, 520, 360, 88, 0, Math.PI * 0.85, Math.PI * 0.15, false);
+    ctx.stroke();
+    ctx.restore();
+
+    // Inner shadow where cone meets brim
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = 'rgba(0,0,0,0.08)';
+    ellipsePath(ctx, 500, 505, 230, 52);
+    ctx.fill();
+
+    // Side darkening to hint denser weave/upturn
+    ctx.fillStyle = 'rgba(0,0,0,0.10)';
+    ctx.beginPath();
+    ctx.moveTo(160, 520);
+    ctx.bezierCurveTo(210, 530, 250, 575, 250, 590);
+    ctx.bezierCurveTo(200, 585, 170, 555, 160, 520);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(840, 520);
+    ctx.bezierCurveTo(790, 530, 750, 575, 750, 590);
+    ctx.bezierCurveTo(800, 585, 830, 555, 840, 520);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    // ===== Cone (main straw body) =====
+    // Cone fill gradient (vertical)
+    const coneGrad = ctx.createLinearGradient(500, 120, 500, 400);
+    coneGrad.addColorStop(0.00, COLORS.straw1);
+    coneGrad.addColorStop(0.55, COLORS.straw2);
+    coneGrad.addColorStop(1.00, COLORS.straw3);
+
+    ctx.save();
+    conePath(ctx);
+    ctx.fillStyle = coneGrad;
+    ctx.fill();
+
+    // Cone outline
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = COLORS.straw4;
+    ctx.stroke();
+
+    // Subtle diagonal weave + arcs inside cone (clipped)
+    ctx.save();
+    conePath(ctx);
+    ctx.clip();
+
+    // Draw diagonal weave impressions
+    drawWeaveDiagonals(ctx, { x: 360, y: 140, w: 280, h: 260 }, 0.18);
+    // Horizontal arcs
+    drawWeaveArcs(ctx);
+
+    // Right-side highlight for directional light
+    ctx.globalAlpha = 0.08;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.moveTo(520, 155);
+    ctx.bezierCurveTo(560, 235, 592, 297, 610, 340);
+    ctx.bezierCurveTo(620, 362, 602, 392, 500, 392);
+    ctx.bezierCurveTo(555, 332, 550, 238, 520, 155);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+    ctx.restore();
+
+    // ===== Decorative band (diamond lattice ring) =====
+    ctx.save();
+    // Create ring clip using even-odd rule: outer ellipse minus inner ellipse
+    ctx.beginPath();
+    ctx.ellipse(500, 340, 185, 48, 0, 0, Math.PI * 2);
+    ctx.ellipse(500, 340, 185, 32, 0, 0, Math.PI * 2);
+    // Clip to ring
+    if (typeof ctx.clip === 'function') {
+      try { ctx.clip('evenodd'); } catch(e) { // fallback if evenodd not supported
+        // Fallback: clip to outer, then punch inner with destination-out
+        ctx.save();
+        ctx.beginPath();
+        ctx.ellipse(500, 340, 185, 48, 0, 0, Math.PI * 2);
+        ctx.clip();
+        // Paint pattern
+        ctx.fillStyle = createDiamondPattern();
+        ctx.globalAlpha = 0.95;
+        ctx.fillRect(500-220, 340-62, 440, 124);
+        // Punch inner
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.beginPath();
+        ctx.ellipse(500, 340, 185, 32, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        // Draw edges and continue
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = COLORS.accent;
+        ctx.globalAlpha = 0.35;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.ellipse(500, 340, 185, 48, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = 0.28;
+        ctx.beginPath();
+        ctx.ellipse(500, 340, 185, 32, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+        // Skip the even-odd path below
+        drawFinial(); // draw finial and exit
+        ctx.restore();
+        return;
+      }
+    }
+
+    // Fill the ring with a repeated diamond pattern
+    ctx.fillStyle = createDiamondPattern();
+    ctx.globalAlpha = 0.95;
+    // Fill a rectangle covering the band area (clipped to the ring)
+    ctx.fillRect(500-220, 340-62, 440, 124);
+
+    // Band edge strokes for crispness
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = COLORS.accent;
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.35;
+    ctx.beginPath();
+    ctx.ellipse(500, 340, 185, 48, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.globalAlpha = 0.28;
+    ctx.beginPath();
+    ctx.ellipse(500, 340, 185, 32, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.restore();
+
+    // ===== Finial (looped top) =====
+    drawFinial();
+
+    ctx.restore(); // end of normalized drawing
+
+    // ---- Finial function (uses base coords) ----
+    function drawFinial(){
+      ctx.save();
+
+      // Base ring under finial
+      ctx.fillStyle = COLORS.straw1;
+      ctx.strokeStyle = COLORS.straw4;
+      ctx.lineWidth = 2;
+      ellipsePath(ctx, 500, 144, 34, 12);
+      ctx.fill();
+      ctx.stroke();
+
+      // Stem
+      ctx.strokeStyle = COLORS.accent;
+      ctx.lineWidth = 6;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(500, 140);
+      ctx.bezierCurveTo(498, 118, 502, 104, 500, 90);
+      ctx.stroke();
+
+      // Looped head (ring) — stroke-only ellipse
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.ellipse(500, 78, 18, 14, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Small highlight on right side of loop
+      ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+      ctx.lineWidth = 4;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      // Arc segment on right side
+      const rx=14, ry=10;
+      // Draw a short arc path by approximating with a curve
+      ctx.moveTo(510, 66);
+      ctx.bezierCurveTo(514, 70, 514, 86, 510, 90);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+  }
+
+  // Initial draw & on resize
+  window.addEventListener('resize', fitCanvas);
+  fitCanvas();
 })();
 </script>
 </body>
