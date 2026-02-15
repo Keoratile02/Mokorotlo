@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Mokorotlo – Canvas (LESOTHO, scalloped bands, finial)</title>
+<title>Mokorotlo – Pic‑2 Style (Canvas only)</title>
 <style>
-  :root{ --bg:#f5f1e7; }
+  :root{ --bg:#f6f2e8; }
   html,body{height:100%;margin:0;background:var(--bg);font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#222}
   .wrap{min-height:100%;display:grid;place-items:center;padding:18px}
   .card{width:min(1100px,96vw);background:#fff;border-radius:16px;box-shadow:0 12px 28px rgba(0,0,0,.08);padding:14px}
   h1{font-size:1.05rem;margin:6px 8px 12px}
-  .stage{width:100%;aspect-ratio: 3 / 2;border-radius:12px;overflow:hidden;background:
-    radial-gradient(1400px 620px at 50% 110%, #e9e2d3, #faf8f1 55%, #ffffff)}
+  .stage{width:100%;aspect-ratio: 3 / 2;border-radius:12px;overflow:hidden;
+    background:radial-gradient(1400px 620px at 50% 110%, #e9e2d3, #fbf8f1 55%, #ffffff)}
   canvas{width:100%;height:100%;display:block}
   .hint{color:#666;font-size:.92rem;margin:10px 8px 4px}
 </style>
@@ -19,107 +19,127 @@
 <body>
   <div class="wrap">
     <div class="card">
-      <h1>Mokorotlo (Basotho Straw Hat) — Canvas‑drawn (exact photo style)</h1>
+      <h1>Mokorotlo — Pic‑2 look (LESOTHO text, red & green scallops, looped finial)</h1>
       <div class="stage">
         <canvas id="mokorotlo"></canvas>
       </div>
-      <p class="hint">Canvas only: cone‑dominant shape, red/green scalloped bands, block “LESOTHO”, woven shading, looped finial.</p>
+      <p class="hint">Pure Canvas (no images/SVG). Resize the window — the drawing stays crisp.</p>
     </div>
   </div>
 
 <script>
 (() => {
-  /************ CONFIG tuned to your photo ************/
-  const BASE_W = 900, BASE_H = 600;  // virtual design space
+  /************ TUNABLE CONFIG (set to match Pic‑2) ************/
+  const SIZE = { W: 900, H: 600 }; // virtual design space
   const C = {
-    strawHi:  '#e8cea0',
+    // Straw tones (warm, like photo)
+    strawHi:  '#ecd09e',
     strawMd:  '#caa66a',
-    strawLo:  '#a67e44',
-    strawLine:'#7d6032',
-    red:      '#b43a33',
-    green:    '#1d4839',
-    greenText:'#0f4a37',
-    finial:   '#76572f',
-    tableSh:  'rgba(0,0,0,0.12)'
+    strawLo:  '#a37843',
+    strawLine:'#7a5d32',
+    // Bands & text
+    red:      '#b43b33',
+    greenBand:'#1e4738',
+    greenText:'#0e4635',
+    // Finial + shadow
+    finial:   '#6f5330',
+    groundSh: 'rgba(0,0,0,0.13)'
   };
 
-  // Geometry approx. to match the photo perspective
+  // Geometry chosen to look like Pic‑2 (cone dominates; brim barely visible)
   const G = {
     cx: 450,
-    coneTopY: 80,
-    coneBaseY: 380,       // where cone “meets” the minimal brim
-    coneRxBase: 270,      // cone half-width at base (wide)
-    coneRxTop:  12,       // small tip radius
-    coneRyBase: 58,       // vertical squash at base ellipse
+    coneTopY: 78,
+    coneBaseY: 378,
+    coneRxTop: 12,     // very narrow tip
+    coneRxBase: 275,   // wide base -> cone looks stout like the photo
+    coneRyBase: 56,    // vertical squash for base ellipse (perspective)
 
-    // Bands (front-facing)
-    yText:   235,
-    yRed:    285,
-    yGreen:  335,
+    // Band centerlines
+    yText: 230,
+    yRed:  282,
+    yGreen:334,
 
-    // Elliptical band radii as factors of cone base radii
-    scaleX: { text:0.64, red:0.80, green:0.93 },
-    scaleY: { text:0.34, red:0.46, green:0.58 },
+    // Band ellipse radii as fractions of base radii
+    scaleX: { text:0.62, red:0.79, green:0.93 },
+    scaleY: { text:0.33, red:0.45, green:0.57 },
 
-    // Scallop counts & depth
-    scallops: { red: 44, green: 48 },
+    // Scallops (count & outward amplitude)
+    scallops: { red: 46, green: 50 },
     amp:      { red: 18, green: 22 }
   };
 
   const canvas = document.getElementById('mokorotlo');
   const ctx = canvas.getContext('2d');
 
-  function fitCanvas() {
+  function fitCanvas(){
     const dpr = Math.max(1, window.devicePixelRatio || 1);
     const r = canvas.getBoundingClientRect();
     canvas.width  = Math.max(2, Math.floor(r.width  * dpr));
     canvas.height = Math.max(2, Math.floor(r.height * dpr));
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
     draw();
   }
 
-  /********************** helpers **********************/
-  function ellipsePath(cx, cy, rx, ry){
-    ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI*2);
-  }
-  function lerp(a,b,t){ return a+(b-a)*t; }
+  /*********************** helpers ************************/
+  const lerp = (a,b,t)=>a+(b-a)*t;
 
-  function shade(hex, amt){
+  function ellipsePath(cx,cy,rx,ry){
+    ctx.beginPath(); ctx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);
+  }
+
+  function shade(hex, amt){ // amt -1..+1
     const h = hex.replace('#','');
-    const r = parseInt(h.slice(0,2),16);
-    const g = parseInt(h.slice(2,4),16);
-    const b = parseInt(h.slice(4,6),16);
-    const adj = v => Math.max(0, Math.min(255, Math.round(v + 255*amt)));
+    const r = parseInt(h.slice(0,2),16), g=parseInt(h.slice(2,4),16), b=parseInt(h.slice(4,6),16);
+    const adj = v => Math.max(0,Math.min(255, Math.round(v + 255*amt)));
     return '#'+[adj(r),adj(g),adj(b)].map(v=>v.toString(16).padStart(2,'0')).join('');
   }
 
   function radiiAtY(y){
     const t = (y - G.coneTopY) / (G.coneBaseY - G.coneTopY);
-    const rx = lerp(G.coneRxTop,  G.coneRxBase, t);
+    const rx = lerp(G.coneRxTop, G.coneRxBase, t);
     const ry = lerp(G.coneRxTop*0.7, G.coneRyBase, t);
     return {rx, ry};
   }
 
-  /********************** drawing **********************/
+  /*********************** drawing ************************/
   function drawGroundShadow(){
     ctx.save();
-    ctx.fillStyle = C.tableSh;
-    ellipsePath(G.cx, G.coneBaseY+36, 210, 20);
+    ctx.fillStyle = C.groundSh;
+    ellipsePath(G.cx, G.coneBaseY + 34, 205, 20);
     ctx.fill();
     ctx.restore();
   }
 
+  function drawBrimTiny(){
+    // In Pic‑2 the brim is barely visible — just a thin lip under the cone
+    const rx = G.coneRxBase * 1.01;
+    const ry = G.coneRyBase * 0.72;
+    const cy = G.coneBaseY + 1.5;
+    const g = ctx.createLinearGradient(G.cx-rx,cy,G.cx+rx,cy);
+    g.addColorStop(0, C.strawHi);
+    g.addColorStop(0.5, C.strawMd);
+    g.addColorStop(1, C.strawLo);
+    ctx.save();
+    ellipsePath(G.cx, cy, rx, ry);
+    ctx.fillStyle = g; ctx.fill();
+    ctx.globalAlpha = 0.55;
+    ctx.lineWidth = 2; ctx.strokeStyle = C.strawLine; ctx.stroke();
+    ctx.restore();
+  }
+
   function drawCone(){
-    // Build cone outline by sampling widths from top to base
-    const steps = 40;
-    const Lx=[], Rx=[], Y=[];
+    // Build silhouette by sampling width from top to base (gives a realistic cone curve)
+    const steps = 44;
+    const L=[],R=[],Y=[];
     for(let i=0;i<=steps;i++){
       const y = lerp(G.coneTopY, G.coneBaseY, i/steps);
       const {rx} = radiiAtY(y);
-      Lx.push(G.cx - rx); Rx.push(G.cx + rx); Y.push(y);
+      L.push([G.cx - rx, y]);
+      R.push([G.cx + rx, y]);
+      Y.push(y);
     }
 
-    // Fill gradient
     const grad = ctx.createLinearGradient(G.cx, G.coneTopY, G.cx, G.coneBaseY);
     grad.addColorStop(0.00, C.strawHi);
     grad.addColorStop(0.55, C.strawMd);
@@ -127,152 +147,120 @@
 
     ctx.save();
     ctx.beginPath();
-    ctx.moveTo(Lx[0], Y[0]);
-    for(let i=1;i<=steps;i++) ctx.lineTo(Lx[i], Y[i]);
-    for(let i=steps;i>=0;i--) ctx.lineTo(Rx[i], Y[i]);
+    ctx.moveTo(L[0][0], L[0][1]);
+    for(let i=1;i<L.length;i++) ctx.lineTo(L[i][0], L[i][1]);
+    for(let i=R.length-1;i>=0;i--) ctx.lineTo(R[i][0], R[i][1]);
     ctx.closePath();
-    ctx.fillStyle = grad;
-    ctx.fill();
+    ctx.fillStyle = grad; ctx.fill();
 
-    ctx.lineWidth = 2.5;
-    ctx.strokeStyle = C.strawLine;
-    ctx.stroke();
+    // outline
+    ctx.strokeStyle = C.strawLine; ctx.lineWidth = 2.4; ctx.stroke();
 
-    // Weave (tighter near top)
-    ctx.save();
-    ctx.clip();
+    // weave inside
+    ctx.save(); ctx.clip();
 
-    // diagonal cross‑hatch, denser toward top
-    const bx = G.cx - G.coneRxBase, by = G.coneTopY, bw = G.coneRxBase*2, bh = G.coneBaseY - G.coneTopY;
-    drawWeaveDiagonals({x:bx, y:by, w:bw, h:bh}, 12, 0.22);
-    drawWeaveDiagonals({x:bx, y:by, w:bw, h:bh*0.55}, 9,  0.26); // extra density top half
+    // diagonal cross‑hatch; denser near apex
+    drawWeave({x:G.cx-G.coneRxBase, y:G.coneTopY, w:G.coneRxBase*2, h:G.coneBaseY-G.coneTopY},
+              {gap:12, alpha:0.22});
+    drawWeave({x:G.cx-G.coneRxBase, y:G.coneTopY, w:G.coneRxBase*2, h:(G.coneBaseY-G.coneTopY)*0.55},
+              {gap:9, alpha:0.26});
 
-    // gentle horizontal arcs
-    ctx.strokeStyle = C.strawLine;
-    ctx.globalAlpha = 0.20;
-    ctx.lineWidth = 1.8;
-    const arcs = [230,260,290,320];
+    // gentle horizontal arcs (ring courses)
+    ctx.strokeStyle = C.strawLine; ctx.globalAlpha = 0.2; ctx.lineWidth = 1.8;
+    const arcs=[225,255,285,315];
     for(const y of arcs){
       ctx.beginPath();
-      ctx.moveTo(G.cx-120, y);
-      ctx.bezierCurveTo(G.cx, y-15, G.cx, y-15, G.cx+120, y);
+      ctx.moveTo(G.cx-120,y);
+      ctx.bezierCurveTo(G.cx,y-14,G.cx,y-14,G.cx+120,y);
       ctx.stroke();
     }
 
-    // right-side soft highlight
-    ctx.globalAlpha = 0.08;
-    ctx.fillStyle = '#fff';
+    // right‑side highlight to match lighting
+    ctx.globalAlpha = 0.09; ctx.fillStyle = '#fff';
     ctx.beginPath();
     ctx.moveTo(G.cx+22, 150);
-    ctx.bezierCurveTo(G.cx+75, 230, G.cx+110, 290, G.cx+128, 330);
-    ctx.bezierCurveTo(G.cx+138, 350, G.cx+118, 384, G.cx, 384);
-    ctx.bezierCurveTo(G.cx+58, 326, G.cx+54, 232, G.cx+22, 150);
+    ctx.bezierCurveTo(G.cx+78, 232, G.cx+112, 292, G.cx+130, 332);
+    ctx.bezierCurveTo(G.cx+140, 352, G.cx+118, 383, G.cx, 383);
+    ctx.bezierCurveTo(G.cx+60, 328, G.cx+56, 232, G.cx+22, 150);
     ctx.closePath();
     ctx.fill();
 
-    ctx.restore();
+    ctx.restore(); // clip
     ctx.restore();
   }
 
-  function drawWeaveDiagonals(bbox, gap, alpha){
+  function drawWeave(bbox, {gap, alpha}){
     const {x,y,w,h} = bbox;
     ctx.save();
-    ctx.strokeStyle = C.strawLine;
-    ctx.lineWidth = 1;
-    // left-leaning
+    ctx.strokeStyle = C.strawLine; ctx.lineWidth = 1;
+
+    // left‑leaning
     ctx.globalAlpha = alpha;
     for(let i=-h;i<w+h;i+=gap){
       ctx.beginPath(); ctx.moveTo(x+i, y+h); ctx.lineTo(x+i+h, y); ctx.stroke();
     }
-    // right-leaning (lighter)
-    ctx.globalAlpha = alpha * 0.7;
+    // right‑leaning lighter
+    ctx.globalAlpha = alpha*0.7;
     for(let i=-h;i<w+h;i+=gap){
       ctx.beginPath(); ctx.moveTo(x+i, y); ctx.lineTo(x+i+h, y+h); ctx.stroke();
     }
     ctx.restore();
   }
 
-  // Very thin brim hint (your photo has almost none)
-  function drawBrim(){
-    const rx = G.coneRxBase * 1.01;
-    const ry = G.coneRyBase * 0.72;
-    const cy = G.coneBaseY + 1.5;
-    const g = ctx.createLinearGradient(G.cx-rx, cy, G.cx+rx, cy);
-    g.addColorStop(0, C.strawHi);
-    g.addColorStop(0.5, C.strawMd);
-    g.addColorStop(1, C.strawLo);
-
-    ctx.save();
-    ellipsePath(G.cx, cy, rx, ry);
-    ctx.fillStyle = g; ctx.fill();
-    ctx.lineWidth = 2;
-    ctx.globalAlpha = 0.6;
-    ctx.strokeStyle = C.strawLine; ctx.stroke();
-    ctx.restore();
-  }
-
-  // Scalloped band with “cut‑out” feel
+  // Scalloped ring with “cut‑out” feel (matches Pic‑2 red/green bands)
   function drawScallopBand({cy, rxScale, ryScale, count, amp, color}){
     const rx = G.coneRxBase * rxScale;
     const ry = G.coneRyBase * ryScale;
 
     ctx.save();
 
-    // Slight dark base to add depth
+    // shallow underlay to deepen color
     ctx.globalAlpha = 0.18;
     ctx.fillStyle = color;
-    ellipsePath(G.cx, cy, rx, ry);
-    ctx.fill();
+    ellipsePath(G.cx, cy, rx, ry); ctx.fill();
 
-    // Scallops arranged around ellipse
     ctx.globalAlpha = 1;
     const TWO = Math.PI*2, step = TWO / count;
     for(let i=0;i<count;i++){
-      const a  = i * step;
-      const px = G.cx + rx * Math.cos(a);
-      const py = cy  + ry * Math.sin(a);
-      const nx = Math.cos(a), ny = Math.sin(a); // outward normal
+      const a = i*step;
+      // ellipse point & outward normal
+      const px = G.cx + rx*Math.cos(a);
+      const py = cy   + ry*Math.sin(a);
+      const nx = Math.cos(a), ny = Math.sin(a);
 
-      const qx = px + nx * amp;
-      const qy = py + ny * amp;
+      const qx = px + nx*amp;
+      const qy = py + ny*amp;
 
-      // ‘Crescent’ scallop: outer petal minus inner bite
-      // Outer
+      // outer petal
       ctx.beginPath();
-      ctx.moveTo(px, py);
-      ctx.quadraticCurveTo(px + (-ny)*amp*0.45, py + (nx)*amp*0.45, qx, qy);
-      ctx.quadraticCurveTo(px + (ny)*amp*0.45, py + (-nx)*amp*0.45, px, py);
+      ctx.moveTo(px,py);
+      ctx.quadraticCurveTo(px+(-ny)*amp*0.45, py+(nx)*amp*0.45, qx, qy);
+      ctx.quadraticCurveTo(px+(ny)*amp*0.45,  py+(-nx)*amp*0.45, px, py);
       ctx.closePath();
 
-      // Fill with radial shading
-      const rad = Math.max(10, amp);
-      const rg = ctx.createRadialGradient(px, py, 0, px, py, rad);
-      rg.addColorStop(0.00, shade(color, 0.10));
-      rg.addColorStop(0.65, color);
-      rg.addColorStop(1.00, shade(color, -0.28));
+      // fill with slight radial shading
+      const rg = ctx.createRadialGradient(px,py,0,px,py,Math.max(10,amp));
+      rg.addColorStop(0.0, shade(color, 0.10));
+      rg.addColorStop(0.6, color);
+      rg.addColorStop(1.0, shade(color,-0.28));
       ctx.fillStyle = rg; ctx.fill();
 
-      // Inner bite to create “cut‑out” look
+      // carve inner bite to get “looped” look
       ctx.save();
       ctx.globalCompositeOperation = 'destination-out';
       ctx.beginPath();
-      const bite = amp * 0.55;
-      ctx.ellipse(px + nx*amp*0.45, py + ny*amp*0.45, bite*0.55, bite*0.45, Math.atan2(ny, nx), 0, Math.PI*2);
+      ctx.ellipse(px+nx*amp*0.42, py+ny*amp*0.42, amp*0.52, amp*0.40, Math.atan2(ny,nx), 0, Math.PI*2);
       ctx.fill();
       ctx.restore();
 
-      // Edge stroke
-      ctx.strokeStyle = shade(color, -0.38);
-      ctx.lineWidth = 1.5;
-      ctx.globalAlpha = 0.9;
-      ctx.stroke();
+      // edge line
+      ctx.strokeStyle = shade(color,-0.36);
+      ctx.lineWidth = 1.5; ctx.globalAlpha = 0.9; ctx.stroke();
       ctx.globalAlpha = 1;
     }
 
-    // Band edge lines (subtle)
-    ctx.globalAlpha = 0.35;
-    ctx.strokeStyle = shade(color, -0.35);
-    ctx.lineWidth = 2;
+    // subtle band edges
+    ctx.globalAlpha = 0.35; ctx.strokeStyle = shade(color,-0.35); ctx.lineWidth = 2;
     ellipsePath(G.cx, cy, rx, ry); ctx.stroke();
     ctx.globalAlpha = 0.25;
     ellipsePath(G.cx, cy, rx*0.965, ry*0.86); ctx.stroke();
@@ -280,14 +268,14 @@
     ctx.restore();
   }
 
-  // Blocky filled “LESOTHO” on a near-straight baseline (tiny curvature)
+  // Filled blocky “LESOTHO” on a near‑straight baseline
   function drawLesotho(){
     const text = 'LESOTHO';
     const cx = G.cx, cy = G.yText;
     const rx = G.coneRxBase * G.scaleX.text;
     const ry = G.coneRyBase * G.scaleY.text;
 
-    // Glyphs built from rectangles (100×80 box), filled
+    // Rect‑based glyphs (100×80 box scaled) — keeps the block look from Pic‑2
     const GL = {
       'L': [[0,0,18,80],[0,62,60,18]],
       'E': [[0,0,18,80],[0,0,60,18],[0,31,48,18],[0,62,60,18]],
@@ -297,90 +285,74 @@
       'H': [[0,0,18,80],[42,0,18,80],[0,31,60,18]]
     };
 
-    // Slight arc only (photo looks almost straight)
-    const span = Math.PI * 0.12;
-    const a0 = -span/2 + (-Math.PI*0.01);
+    const span = Math.PI * 0.11;            // tiny curvature like the photo
+    const a0 = -span/2 - Math.PI*0.01;      // slight tilt
 
-    const letterAdvance = 66; // spacing
-    const totalW = (text.length-1)*letterAdvance + 60; // approx
-    const startX = -totalW/2;
+    const advance = 66;                      // spacing
+    const totalW  = (text.length-1)*advance + 60;
+    const startX  = -totalW/2;
 
     ctx.save();
     ctx.fillStyle = C.greenText;
-    ctx.strokeStyle = C.greenText;
-    ctx.lineJoin = 'miter';
-    ctx.lineCap = 'butt';
+    ctx.lineJoin = 'miter'; ctx.lineCap = 'butt';
 
     for(let i=0;i<text.length;i++){
-      const ch = text[i], rects = GL[ch]; if(!rects) continue;
-      // Base x along the front
-      const xFront = startX + i*letterAdvance + 30; // center each 60w glyph
-      // Map xFront (−total/2..+total/2) to small arc angle on ellipse
-      const t = (xFront - startX) / totalW; // 0..1
-      const a = a0 + t * span;
-      const px = cx + rx * Math.cos(a);
-      const py = cy + ry * Math.sin(a);
+      const ch = text[i], rects = GL[ch];
+      const xFront = startX + i*advance + 30;
+      const t = (xFront - startX) / totalW;
+      const a = a0 + t*span;
 
-      // Angle of tangent (kept small)
+      const px = cx + rx*Math.cos(a);
+      const py = cy + ry*Math.sin(a);
       const tang = Math.atan2(ry*Math.cos(a), -rx*Math.sin(a));
-      const scaleY = 0.95;           // slight vertical squash
-      const skew   = -0.10;          // tiny shear to mimic cone perspective
 
-      // Draw glyph filled
+      // draw glyph filled, slightly squashed & sheared (cone perspective)
       ctx.save();
       ctx.translate(px, py);
-      ctx.rotate(tang * 0.4); // much gentler than full tangent (nearly straight)
-      ctx.transform(1, skew, 0, scaleY, 0, 0);
-      const s = 0.9;
-      const ox = -30, oy = -40; // center 60×80 box
+      ctx.rotate(tang * 0.35); // keep almost straight
+      ctx.transform(1, -0.10, 0, 0.95, 0, 0); // shearY, scaleY
+      const s = 0.92, ox=-30, oy=-40;
       ctx.beginPath();
-      for(const r of rects){
-        ctx.rect(ox + r[0]*s, oy + r[1]*s, r[2]*s, r[3]*s);
-      }
+      for(const r of rects) ctx.rect(ox + r[0]*s, oy + r[1]*s, r[2]*s, r[3]*s);
       ctx.fill();
       ctx.restore();
     }
     ctx.restore();
   }
 
-  // Finial: messy loops + knot
   function drawFinial(){
     ctx.save();
     // Base ring
-    ctx.fillStyle = C.strawHi;
-    ctx.strokeStyle = C.strawLine;
-    ctx.lineWidth = 2;
+    ctx.fillStyle = C.strawHi; ctx.strokeStyle = C.strawLine; ctx.lineWidth = 2;
     ellipsePath(G.cx, 140, 30, 10); ctx.fill(); ctx.stroke();
 
     // Stem
-    ctx.strokeStyle = C.finial;
-    ctx.lineWidth = 6; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(G.cx,138); ctx.bezierCurveTo(G.cx-1,120,G.cx+2,106,G.cx,92); ctx.stroke();
+    ctx.strokeStyle = C.finial; ctx.lineWidth = 6; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(G.cx, 138);
+    ctx.bezierCurveTo(G.cx-2,118, G.cx+2,106, G.cx, 92);
+    ctx.stroke();
 
-    // Twisted loops (more of them, varied)
-    ctx.strokeStyle = C.finial;
-    ctx.lineWidth = 5.2;
+    // Messy loop bundle
+    ctx.strokeStyle = C.finial; ctx.lineWidth = 5.2;
     const baseY = 124;
     const loops = [
-      {dx:-18, w:18, h:28, rot:-0.08},
-      {dx: 18, w:18, h:26, rot: 0.10},
+      {dx:-18, w:18, h:28, rot:-0.1},
+      {dx: 18, w:18, h:26, rot: 0.1},
       {dx: -6, w:20, h:32, rot: 0.02},
-      {dx:  8, w:18, h:30, rot:-0.04},
+      {dx:  8, w:18, h:30, rot:-0.05},
       {dx:-12, w:14, h:22, rot: 0.12},
-      {dx: 12, w:14, h:22, rot:-0.10},
+      {dx: 12, w:14, h:22, rot:-0.12},
     ];
     for(const L of loops){
-      ctx.save();
-      ctx.translate(G.cx+L.dx, baseY);
-      ctx.rotate(L.rot);
-      ctx.beginPath(); ctx.ellipse(0, 0, L.w, L.h, 0, 0, Math.PI*2); ctx.stroke();
+      ctx.save(); ctx.translate(G.cx+L.dx, baseY); ctx.rotate(L.rot);
+      ctx.beginPath(); ctx.ellipse(0,0,L.w,L.h,0,0,Math.PI*2); ctx.stroke();
       ctx.restore();
     }
 
-    // Knot
-    ctx.beginPath(); ctx.arc(G.cx, 86, 8, 0, Math.PI*2); ctx.fillStyle = C.finial; ctx.fill();
+    // Knot + tiny highlight
+    ctx.beginPath(); ctx.arc(G.cx, 86, 8, 0, Math.PI*2);
+    ctx.fillStyle = C.finial; ctx.fill();
 
-    // Highlight
     ctx.strokeStyle = 'rgba(255,255,255,0.22)'; ctx.lineWidth = 3.2;
     ctx.beginPath(); ctx.arc(G.cx+8, 78, 6, Math.PI*0.2, Math.PI*1.25); ctx.stroke();
 
@@ -388,7 +360,7 @@
   }
 
   function drawBands(){
-    // Red inner scallops (slightly smaller rx/ry, less amplitude)
+    // Red inner band
     drawScallopBand({
       cy: G.yRed,
       rxScale: G.scaleX.red,
@@ -398,14 +370,14 @@
       color: C.red
     });
 
-    // Dark‑green outer scallops (bigger & deeper)
+    // Dark‑green outer band
     drawScallopBand({
       cy: G.yGreen,
       rxScale: G.scaleX.green,
       ryScale: G.scaleY.green,
       count: G.scallops.green,
       amp: G.amp.green,
-      color: C.green
+      color: C.greenBand
     });
   }
 
@@ -414,13 +386,13 @@
     const h = canvas.getBoundingClientRect().height;
     ctx.clearRect(0,0,w,h);
 
-    // Fit BASE space and center
-    const sx = w/BASE_W, sy = h/BASE_H, s = Math.min(sx, sy);
-    const ox = (w - BASE_W*s)/2, oy = (h - BASE_H*s)/2;
+    // normalize to design space & center
+    const sx = w / SIZE.W, sy = h / SIZE.H, s = Math.min(sx, sy);
+    const ox = (w - SIZE.W*s)/2, oy = (h - SIZE.H*s)/2;
     ctx.save(); ctx.translate(ox, oy); ctx.scale(s, s);
 
     drawGroundShadow();
-    drawBrim();       // very thin
+    drawBrimTiny();
     drawCone();
     drawBands();
     drawLesotho();
